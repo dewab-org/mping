@@ -21,6 +21,8 @@ jobs:
 
   build-binaries:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -32,8 +34,21 @@ jobs:
         run: GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -o dist/mping-linux-arm64 ./cmd/mping
       - name: Build macOS arm64
         run: GOOS=darwin GOARCH=arm64 CGO_ENABLED=0 go build -o dist/mping-darwin-arm64 ./cmd/mping
-      - name: Upload artifacts
+      - name: Package binaries
+        run: |
+          mkdir -p dist/pkg
+          tar czf dist/pkg/mping-linux-amd64.tar.gz -C dist mping-linux-amd64
+          tar czf dist/pkg/mping-linux-arm64.tar.gz -C dist mping-linux-arm64
+          tar czf dist/pkg/mping-darwin-arm64.tar.gz -C dist mping-darwin-arm64
+      - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: mping-binaries
-          path: dist/
+          path: dist/pkg/*.tar.gz
+      - name: Create release
+        if: github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: nightly
+          name: Nightly build
+          files: dist/pkg/*.tar.gz

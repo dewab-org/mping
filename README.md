@@ -1,14 +1,32 @@
+# mping
+
+![Build](https://github.com/dewab/mping/actions/workflows/build.yml/badge.svg)
+
 `multiping` (binary `mping`) is a terminal UI for multi-host ping monitoring. It pings hosts concurrently, shows success/failure counters and RTTs, and lets you add/remove hosts at runtime.
 
-![Build](https://github.com/your-repo/mping/actions/workflows/build.yml/badge.svg)
-
 ## Build
+
+### Prerequisites
+
+- Go 1.22+
+
+### Manual build
+
+```bash
+go build -o mping ./cmd/mping
+```
+
+### Make
 
 ```bash
 make
 ```
 
-Requires Go 1.22+. The default target builds `./cmd/mping` into `./mping`.
+The default target builds `./cmd/mping` into `./mping`.
+
+## Demo
+
+[![asciicast](https://asciinema.org/a/wdOvXd28Acqnh8oZsn8z4bYOI.svg)](https://asciinema.org/a/wdOvXd28Acqnh8oZsn8z4bYOI)
 
 ## Run
 
@@ -22,36 +40,93 @@ Requires Go 1.22+. The default target builds `./cmd/mping` into `./mping`.
 You can add hosts as space-separated positional arguments (domains or IPs) or via `--file/-f` (one host per line).
 
 Key options:
+
 - `--interval/-i <seconds>`: default ping interval (default 10)
 - `--timeout/-t <seconds>`: default timeout (default 2)
 - `--refresh/-R <seconds>`: screen refresh interval (default 1)
 - `--backend <system|native>`: choose ping backend
 - `--max-concurrent-pings <n>`: worker pool size (default 64)
 - `--ping-queue-capacity <n>`: queue size for pending ping jobs (default 256)
-- `--config <path>`: optional YAML config (see example below)
+- `--config <path>`: YAML config path (see Configuration)
 - `--theme/-T <name>`: select theme by name
 - `--list-themes`: list themes discovered from theme files
+- `--version`: show program version
 
-## Themes
+## Configuration
 
-Themes are loaded from `.theme` files using hex or `r g b` values.
+### File locations (XDG)
 
-Search order:
+Search order for config (first found wins):
+
+1. `--config /path/to/config.yaml` (overrides search)
+2. `$XDG_CONFIG_HOME/mping/config.yaml`
+3. `$HOME/.config/mping/config.yaml`
+4. Legacy fallback: `$HOME/.mping/config.yaml`
+
+If none is found, built-in defaults are used.
+
+### Config structure (YAML)
+
+```yaml
+interval_seconds: 10
+timeout_seconds: 2
+refresh_seconds: 1
+theme: "default"
+
+concurrency:
+  max_concurrent_pings: 64
+  max_hosts: 0
+  ping_queue_capacity: 256
+
+memory:
+  max_hosts_tracked: 0
+
+ping:
+  backend: "system"            # or "native"
+  system_command: "ping"
+  system_args: ["-c", "1"]     # defaults chosen per OS if omitted
+
+themes:
+  custom-dark:
+    title_background: "#000080"
+    title_foreground: "#ffffff"
+    status_background: "#000080"
+    status_foreground: "#ffffff"
+    header_background: "#000060"
+    header_foreground: "#ffffff"
+    row_foreground: "#ffffff"
+    ok_text_success: "#00ff00"
+    ok_text_failure: "#ff0000"
+    modal_border_background: "#000080"
+    modal_border_foreground: "#ffffff"
+    button_ok_background: "#00aa00"
+    button_ok_foreground: "#ffffff"
+    button_cancel_background: "#aa0000"
+    button_cancel_foreground: "#ffffff"
+```
+
+### Themes
+
+Theme discovery order:
+
 1. `./themes/*.theme`
 2. Config directory (if `--config` is provided)
 3. `<config_dir>/themes/*.theme`
+4. `/usr/local/share/mping/themes`, `/usr/share/mping/themes`, `/opt/homebrew/share/mping/themes`
 
-See `themes/default.theme`, `themes/dracula.theme`, `themes/solarized-dark.theme`, `themes/solarized-light.theme`, and `themes/nord.theme` for examples. You can add more in the same format.
+`.theme` files use key=value pairs with hex (`#RRGGBB`, `#GG`) or RGB triplets (`r g b`).
 
-## Example config
+Keys: `title_background`, `title_foreground`, `status_background`, `status_foreground`, `header_background`, `header_foreground`, `row_foreground`, `ok_text_success`, `ok_text_failure`, `modal_border_background`, `modal_border_foreground`, `button_ok_background`, `button_ok_foreground`, `button_cancel_background`, `button_cancel_foreground`.
 
-See `examples/config.yaml` for a starting point. Themes can be defined inline under `themes:` and/or provided as `.theme` files in the config directory’s `themes/` subfolder.
+Examples provided in `themes/`: `default`, `dracula`, `solarized-dark`, `solarized-light`, `nord`.
+
+You can define themes inline in YAML under `themes:` or via `.theme` files.
 
 ## Controls
 
 - `a`: add hosts
-- `o`: sort options
-- `s`: settings (interval, timeout, refresh, sort, theme)
+- `o`: sort cycle
+- `s`: settings (interval, timeout, refresh, sort, theme, backend, args)
 - `r`: reverse sort
 - `i`: set interval
 - `t`: set timeout
