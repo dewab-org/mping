@@ -1,0 +1,27 @@
+# mping configuration example
+
+interval_seconds: 10
+timeout_seconds: 2
+refresh_seconds: 1
+theme: "default"
+
+concurrency:
+  max_concurrent_pings: 64
+  max_hosts: 0
+  ping_queue_capacity: 256
+
+memory:
+  max_hosts_tracked: 0
+
+ping:
+  backend: "system"
+  system_command: "ping"
+  system_args_linux: ["-c", "1"]
+  system_args_darwin: ["-c", "1"]
+
+theme: "default"
+themes:
+  # override or add themes here; values map to .theme files in the config directory's themes/ subfolder
+  custom:
+    title_background: "#000080"
+    title_foreground: "#ffffff"

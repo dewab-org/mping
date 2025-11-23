@@ -1,0 +1,16 @@
+# Dracula-inspired theme
+title_background=#282a36
+title_foreground=#f8f8f2
+status_background=#282a36
+status_foreground=#f8f8f2
+header_background=#44475a
+header_foreground=#f8f8f2
+row_foreground=#f8f8f2
+ok_text_success=#50fa7b
+ok_text_failure=#ff5555
+modal_border_background=#44475a
+modal_border_foreground=#f8f8f2
+button_ok_background=#50fa7b
+button_ok_foreground=#282a36
+button_cancel_background=#ff5555
+button_cancel_foreground=#f8f8f2

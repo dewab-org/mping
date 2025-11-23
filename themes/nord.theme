@@ -1,0 +1,16 @@
+# Nord-inspired theme
+title_background=#2e3440
+title_foreground=#eceff4
+status_background=#2e3440
+status_foreground=#eceff4
+header_background=#3b4252
+header_foreground=#e5e9f0
+row_foreground=#e5e9f0
+ok_text_success=#8fbcbb
+ok_text_failure=#bf616a
+modal_border_background=#3b4252
+modal_border_foreground=#eceff4
+button_ok_background=#8fbcbb
+button_ok_foreground=#2e3440
+button_cancel_background=#bf616a
+button_cancel_foreground=#eceff4

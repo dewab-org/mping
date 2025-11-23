@@ -1,0 +1,16 @@
+# Solarized Light theme
+title_background=#fdf6e3
+title_foreground=#657b83
+status_background=#fdf6e3
+status_foreground=#657b83
+header_background=#eee8d5
+header_foreground=#586e75
+row_foreground=#586e75
+ok_text_success=#859900
+ok_text_failure=#dc322f
+modal_border_background=#eee8d5
+modal_border_foreground=#657b83
+button_ok_background=#859900
+button_ok_foreground=#fdf6e3
+button_cancel_background=#dc322f
+button_cancel_foreground=#fdf6e3

@@ -1,0 +1,16 @@
+# Solarized Dark theme
+title_background=#002b36
+title_foreground=#93a1a1
+status_background=#002b36
+status_foreground=#93a1a1
+header_background=#073642
+header_foreground=#eee8d5
+row_foreground=#93a1a1
+ok_text_success=#859900
+ok_text_failure=#dc322f
+modal_border_background=#073642
+modal_border_foreground=#93a1a1
+button_ok_background=#859900
+button_ok_foreground=#002b36
+button_cancel_background=#dc322f
+button_cancel_foreground=#fdf6e3

@@ -1,0 +1,16 @@
+# Default multiping theme
+title_background=#000080
+title_foreground=#ffffff
+status_background=#000080
+status_foreground=#ffffff
+header_background=#000060
+header_foreground=#ffffff
+row_foreground=#ffffff
+ok_text_success=#00ff00
+ok_text_failure=#ff0000
+modal_border_background=#000080
+modal_border_foreground=#ffffff
+button_ok_background=#00aa00
+button_ok_foreground=#ffffff
+button_cancel_background=#aa0000
+button_cancel_foreground=#ffffff

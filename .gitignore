@@ -1,0 +1,15 @@
+bin/
+build/
+mping
+mping.exe
+*.log
+*.out
+*.o
+*.a
+coverage.txt
+dist/
+vendor/
+.DS_Store
+.idea/
+.vscode/
+*.swp
