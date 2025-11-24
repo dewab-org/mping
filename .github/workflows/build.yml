@@ -41,11 +41,18 @@ jobs:
           tar czf dist/pkg/mping-linux-amd64.tar.gz -C dist mping-linux-amd64
           tar czf dist/pkg/mping-linux-arm64.tar.gz -C dist mping-linux-arm64
           tar czf dist/pkg/mping-darwin-arm64.tar.gz -C dist mping-darwin-arm64
+      - name: Generate checksums
+        run: |
+          cd dist/pkg
+          for f in *.tar.gz; do
+            md5sum "$f" > "$f".md5
+            sha256sum "$f" > "$f".sha256
+          done
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: mping-binaries
-          path: dist/pkg/*.tar.gz
+          path: dist/pkg/*
       - name: Create release
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
@@ -53,11 +60,11 @@ jobs:
           tag_name: ${{ github.ref_name }}
           name: ${{ github.ref_name }}
           generate_release_notes: true
-          files: dist/pkg/*.tar.gz
+          files: dist/pkg/*
       - name: Nightly artifact (main only)
         if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: nightly
           name: Nightly build
-          files: dist/pkg/*.tar.gz
+          files: dist/pkg/*
