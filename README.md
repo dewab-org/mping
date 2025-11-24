@@ -19,10 +19,17 @@ go build -o mping ./cmd/mping
 ### Make
 
 ```bash
-make
+make                          # build ./mping
+make install PREFIX=/usr/local  # install binary + themes + man page
 ```
 
-The default target builds `./cmd/mping` into `./mping`.
+`go install` can build the binary but will not install themes or the man page.
+
+### Releases
+
+- Tagged `v*` builds publish per-platform tarballs.
+- Nightly builds from `main` publish `mping-<os>-<arch>.tar.gz`.
+- Targets: Linux amd64/arm64, macOS arm64 (statically linked).
 
 ## Demo
 

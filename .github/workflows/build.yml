@@ -3,6 +3,7 @@ name: Build and Test
 on:
   push:
     branches: [ main ]
+    tags: [ "v*" ]
   pull_request:
     branches: [ main ]
 
@@ -46,6 +47,14 @@ jobs:
           name: mping-binaries
           path: dist/pkg/*.tar.gz
       - name: Create release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          generate_release_notes: true
+          files: dist/pkg/*.tar.gz
+      - name: Nightly artifact (main only)
         if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:

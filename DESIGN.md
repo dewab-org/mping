@@ -1,6 +1,6 @@
 ## Overview
 
-`mping` is a terminal TUI for multi-host ping monitoring. It accepts hosts on the CLI and at runtime, pings them concurrently with a pluggable backend, and renders a sortable table showing RTT, success/failure counts, last OK time, and errors. The UI remains responsive via a worker pool and per-host schedulers. Settings can be changed on the fly (interval, timeout, refresh, sort, theme).
+`mping` is a terminal TUI for multi-host ping monitoring. It accepts hosts on the CLI and at runtime, pings them concurrently with a pluggable backend, and renders a sortable table showing RTT, success/failure counts, last OK time, and errors. The UI remains responsive via a worker pool and per-host schedulers. Settings (interval, timeout, refresh, sort, theme, backend, system args) can be changed on the fly.
 
 ## Core Behavior
 - Hosts accepted via CLI (space/comma/newline), `--file`/`-f` (one per line), and runtime Add Hosts dialog.
@@ -18,12 +18,12 @@
 - Title shows backend, sort, workers, interval, timeout, refresh, theme, config path.
 - Status bar shows keybindings.
 - Modals: Add hosts, interval, timeout, sort, help, settings.
-- Settings modal with sections: Ping (backend, interval, timeout, system args), Sort (key/dir), Display (theme, refresh). Height is dynamic to fit items and buttons without scrolling.
+- Settings modal with sections: Ping (backend, interval, timeout, system args), Sort (key/dir), Display (theme, refresh). Height is computed from form items + buttons (no scrolling); tab order reaches all fields including sort direction.
 - Keys: arrows/PageUp/PageDown for selection; a add; d delete; o sort; s settings; r reverse sort; i interval; t timeout; h/? help; q/Ctrl+C quit.
 
 ## Themes
 - `.theme` files (key=value) using hex (`#RRGGBB`, `#GG`) or RGB triplets (`r g b`).
-- Keys: `title_background`, `title_foreground`, `status_background`, `status_foreground`, `header_background`, `header_foreground`, `row_foreground`, `ok_text_success`, `ok_text_failure`, `modal_border_background`, `modal_border_foreground`.
+- Keys: `title_background`, `title_foreground`, `status_background`, `status_foreground`, `header_background`, `header_foreground`, `row_foreground`, `ok_text_success`, `ok_text_failure`, `modal_border_background`, `modal_border_foreground`, `button_ok_background`, `button_ok_foreground`, `button_cancel_background`, `button_cancel_foreground`.
 - Search order for themes:
   1. `./themes/*.theme`
   2. Config directory (if `--config` is provided)
@@ -40,12 +40,14 @@
   4. Legacy fallback: `$HOME/.mping/config.yaml`.
 - If not found, built-in defaults apply.
 - Config keys (subset): `interval_seconds`, `timeout_seconds`, `refresh_seconds`, `ping.backend`, `concurrency.*`, `memory.*`, `ping.*`, `theme` (name), `themes` (inline definitions matching theme keys).
+- System ping args are unified (`system_args`); OS defaults are applied if absent.
 
 ## Concurrency Model
 - Main UI goroutine (tview) handles keypresses/modals; no blocking ping/DNS.
 - Host scheduler goroutines (one per host) sleep for interval, enqueue ping jobs.
 - Worker pool: size = `max_concurrent_pings`; reads jobs from buffered channel (`ping_queue_capacity`); applies results to shared state; triggers UI redraw.
 - Backpressure via job queue; deletion stops scheduler; missing host skips updates.
+- UI redraws are driven by a periodic refresh ticker (default 1s) and marked-dirty updates from workers and settings changes.
 
 ## Ping Backends
 - Interface:

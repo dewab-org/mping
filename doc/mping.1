@@ -1,0 +1,62 @@
+.TH MPING 1 "January 2025" "mping 0.01" "User Commands"
+.SH NAME
+mping \- terminal UI for multi-host ping monitoring
+.SH SYNOPSIS
+.B mping
+[options] [hosts...]
+.SH DESCRIPTION
+.B mping
+is a terminal user interface (TUI) that pings multiple hosts concurrently, displaying RTT, success/failure counts, last OK time, and errors. Hosts can be added or removed at runtime.
+.SH OPTIONS
+.TP
+.B \-\-interval, \-i \fISECONDS\fR
+Default ping interval (default 10).
+.TP
+.B \-\-timeout, \-t \fISECONDS\fR
+Default ping timeout (default 2).
+.TP
+.B \-\-refresh, \-R \fISECONDS\fR
+Screen refresh interval (default 1).
+.TP
+.B \-\-backend \fI(system|native)\fR
+Select ping backend (default system).
+.TP
+.B \-\-max-concurrent-pings \fIN\fR
+Worker pool size (default 64).
+.TP
+.B \-\-ping-queue-capacity \fIN\fR
+Ping job queue capacity (default 256).
+.TP
+.B \-\-file, \-f \fIPATH\fR
+File with one host per line.
+.TP
+.B \-\-config \fIPATH\fR
+YAML configuration file.
+.TP
+.B \-\-theme, \-T \fINAME\fR
+Select theme by name.
+.TP
+.B \-\-list-themes
+List discovered theme names.
+.TP
+.B \-\-version
+Print version and exit.
+.TP
+.B \-\-help, \-h
+Show help.
+.SH CONFIGURATION
+Config search order:
+1) \-\-config /path/to/config.yaml
+2) $XDG_CONFIG_HOME/mping/config.yaml
+3) $HOME/.config/mping/config.yaml
+4) $HOME/.mping/config.yaml
+.P
+See README for full YAML schema. Themes are loaded from .theme files in ./themes, the config directory and its themes subdir, and system locations (/usr/local/share/mping/themes, /usr/share/mping/themes, /opt/homebrew/share/mping/themes).
+.SH CONTROLS
+Arrow keys/PageUp/PageDown to navigate.
+.br
+a add hosts; o cycle sort; s settings; r reverse sort; i set interval; t set timeout; d delete host; h/? help; q/Ctrl+C quit.
+.SH AUTHOR
+mping developers.
+.SH SEE ALSO
+ping(8)

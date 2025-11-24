@@ -66,7 +66,7 @@ func main() {
 		return
 	}
 	if *versionFlag {
-		fmt.Println("mping v0.01")
+		fmt.Println("mping v0.0.2")
 		return
 	}
 	// themeDirs defined after config parsing; postpone listThemes handling
