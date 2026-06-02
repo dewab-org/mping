@@ -30,11 +30,14 @@ const (
 // HostState holds mutable runtime statistics for a host.
 type HostState struct {
 	Name         string
+	Protocol     string
+	TCPPort      int
 	IP           string
 	ResolvedName string
 	SuccessCount int64
 	FailureCount int64
 	LastRTT      time.Duration
+	LastStatus   string
 	LastError    string
 	LastOK       time.Time
 	Interval     time.Duration
@@ -45,11 +48,14 @@ type HostState struct {
 type HostSnapshot struct {
 	Key          string
 	Name         string
+	Protocol     string
+	TCPPort      int
 	IP           string
 	ResolvedName string
 	SuccessCount int64
 	FailureCount int64
 	LastRTT      time.Duration
+	LastStatus   string
 	LastError    string
 	LastOK       time.Time
 	Interval     time.Duration
@@ -76,9 +82,17 @@ func NewSharedState(maxHosts int) *SharedState {
 }
 
 func (s *SharedState) AddHost(host string, interval, timeout time.Duration) error {
-	key := strings.TrimSpace(host)
-	if key == "" {
+	return s.AddHostSpec(HostSpec{Key: strings.TrimSpace(host), Name: strings.TrimSpace(host)}, interval, timeout)
+}
+
+func (s *SharedState) AddHostSpec(spec HostSpec, interval, timeout time.Duration) error {
+	key := strings.TrimSpace(spec.Key)
+	name := strings.TrimSpace(spec.Name)
+	if key == "" || name == "" {
 		return errors.New("empty host")
+	}
+	if spec.Protocol == "" {
+		spec.Protocol = "icmp"
 	}
 
 	s.mu.Lock()
@@ -93,12 +107,15 @@ func (s *SharedState) AddHost(host string, interval, timeout time.Duration) erro
 
 	s.hosts[key] = &HostState{
 		Name:         key,
+		Protocol:     spec.Protocol,
+		TCPPort:      spec.TCPPort,
 		IP:           "",
-		ResolvedName: key,
+		ResolvedName: name,
 		LastRTT:      0,
 		Interval:     interval,
 		Timeout:      timeout,
 	}
+	s.hosts[key].Name = name
 	s.order = append(s.order, key)
 	s.sortLocked()
 	return nil
@@ -143,6 +160,7 @@ func (s *SharedState) ApplyResult(key string, res ping.PingResult, err error) bo
 		h.LastError = res.RawError
 	}
 	h.LastRTT = res.RTT
+	h.LastStatus = res.Status
 
 	s.sortLocked()
 	return true
@@ -158,11 +176,14 @@ func (s *SharedState) Snapshot() []HostSnapshot {
 		out = append(out, HostSnapshot{
 			Key:          k,
 			Name:         h.Name,
+			Protocol:     h.Protocol,
+			TCPPort:      h.TCPPort,
 			IP:           h.IP,
 			ResolvedName: h.ResolvedName,
 			SuccessCount: h.SuccessCount,
 			FailureCount: h.FailureCount,
 			LastRTT:      h.LastRTT,
+			LastStatus:   h.LastStatus,
 			LastError:    h.LastError,
 			LastOK:       h.LastOK,
 			Interval:     h.Interval,
@@ -202,14 +223,14 @@ func (s *SharedState) SetTimeout(timeout time.Duration) {
 	}
 }
 
-func (s *SharedState) HostConfig(key string) (name string, interval, timeout time.Duration, ok bool) {
+func (s *SharedState) HostConfig(key string) (name, protocol string, tcpPort int, interval, timeout time.Duration, ok bool) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	h, ok := s.hosts[key]
 	if !ok {
-		return "", 0, 0, false
+		return "", "", 0, 0, 0, false
 	}
-	return h.Name, h.Interval, h.Timeout, true
+	return h.Name, h.Protocol, h.TCPPort, h.Interval, h.Timeout, true
 }
 
 func (s *SharedState) Count() int {

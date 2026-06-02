@@ -14,7 +14,8 @@ func NewNativeBackend() *NativeBackend {
 	return &NativeBackend{}
 }
 
-func (b *NativeBackend) Ping(ctx context.Context, hostName string, timeout time.Duration) (PingResult, error) {
+func (b *NativeBackend) Ping(ctx context.Context, target Target, timeout time.Duration) (PingResult, error) {
+	hostName := target.HostName
 	ip, resolved := resolveHost(hostName)
 
 	pinger, err := goping.NewPinger(hostName)

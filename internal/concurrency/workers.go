@@ -12,6 +12,8 @@ import (
 type PingJob struct {
 	HostKey  string
 	HostName string
+	Protocol string
+	TCPPort  int
 	Timeout  time.Duration
 }
 
@@ -57,7 +59,7 @@ func (p *WorkerPool) worker() {
 func (p *WorkerPool) runJob(job PingJob) {
 	ctx, cancel := context.WithTimeout(p.ctx, job.Timeout)
 	defer cancel()
-	res, err := p.backend.Ping(ctx, job.HostName, job.Timeout)
+	res, err := p.backend.Ping(ctx, ping.Target{HostName: job.HostName, Protocol: job.Protocol, TCPPort: job.TCPPort}, job.Timeout)
 	p.state.ApplyResult(job.HostKey, res, err)
 	if p.notify != nil {
 		p.notify()
@@ -114,7 +116,7 @@ func (g *SchedulerGroup) runScheduler(ctx context.Context, hostKey string) {
 	// initial immediate ping
 	g.enqueue(hostKey)
 	for {
-		name, interval, timeout, ok := g.state.HostConfig(hostKey)
+		name, protocol, tcpPort, interval, timeout, ok := g.state.HostConfig(hostKey)
 		if !ok {
 			return
 		}
@@ -122,17 +124,17 @@ func (g *SchedulerGroup) runScheduler(ctx context.Context, hostKey string) {
 		case <-ctx.Done():
 			return
 		case <-time.After(interval):
-			g.pool.Submit(PingJob{HostKey: hostKey, HostName: name, Timeout: timeout})
+			g.pool.Submit(PingJob{HostKey: hostKey, HostName: name, Protocol: protocol, TCPPort: tcpPort, Timeout: timeout})
 		}
 	}
 }
 
 func (g *SchedulerGroup) enqueue(hostKey string) {
-	name, _, timeout, ok := g.state.HostConfig(hostKey)
+	name, protocol, tcpPort, _, timeout, ok := g.state.HostConfig(hostKey)
 	if !ok {
 		return
 	}
-	g.pool.Submit(PingJob{HostKey: hostKey, HostName: name, Timeout: timeout})
+	g.pool.Submit(PingJob{HostKey: hostKey, HostName: name, Protocol: protocol, TCPPort: tcpPort, Timeout: timeout})
 }
 
 func (g *SchedulerGroup) Stop(hostKey string) {

@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"time"
 
 	"gopkg.in/yaml.v3"
@@ -37,6 +38,8 @@ type MemoryConfig struct {
 
 type PingConfig struct {
 	Backend       string   `yaml:"backend"`
+	Protocol      string   `yaml:"protocol"`
+	TCPPort       int      `yaml:"tcp_port"`
 	SystemCommand string   `yaml:"system_command"`
 	SystemArgs    []string `yaml:"system_args"`
 }
@@ -70,6 +73,8 @@ type Settings struct {
 	MaxHostsTracked    int
 	PingQueueCapacity  int
 	Backend            string
+	Protocol           string
+	TCPPort            int
 	SystemCommand      string
 	SystemArgs         []string
 	Theme              ThemeConfig
@@ -93,6 +98,8 @@ func Defaults() Config {
 		},
 		Ping: PingConfig{
 			Backend:       "system",
+			Protocol:      "icmp",
+			TCPPort:       443,
 			SystemCommand: "ping",
 		},
 		Theme: ThemeConfig{
@@ -184,6 +191,12 @@ func MergeSettings(defaults Config, fileCfg Config, cli CLIOverrides, configPath
 		if src.Ping.Backend != "" {
 			dst.Ping.Backend = src.Ping.Backend
 		}
+		if src.Ping.Protocol != "" {
+			dst.Ping.Protocol = src.Ping.Protocol
+		}
+		if src.Ping.TCPPort > 0 {
+			dst.Ping.TCPPort = src.Ping.TCPPort
+		}
 		if src.Ping.SystemCommand != "" {
 			dst.Ping.SystemCommand = src.Ping.SystemCommand
 		}
@@ -218,6 +231,12 @@ func MergeSettings(defaults Config, fileCfg Config, cli CLIOverrides, configPath
 	if cli.Backend != "" {
 		merged.Ping.Backend = cli.Backend
 	}
+	if cli.Protocol != "" {
+		merged.Ping.Protocol = cli.Protocol
+	}
+	if cli.TCPPort > 0 {
+		merged.Ping.TCPPort = cli.TCPPort
+	}
 	if cli.ThemeName != "" {
 		merged.ThemeName = cli.ThemeName
 	}
@@ -232,11 +251,15 @@ func MergeSettings(defaults Config, fileCfg Config, cli CLIOverrides, configPath
 		MaxHostsTracked:    merged.Memory.MaxHostsTracked,
 		PingQueueCapacity:  merged.Concurrency.PingQueueCapacity,
 		Backend:            merged.Ping.Backend,
+		Protocol:           merged.Ping.Protocol,
+		TCPPort:            merged.Ping.TCPPort,
 		SystemCommand:      merged.Ping.SystemCommand,
 		SystemArgs:         defaultArgs(merged.Ping.SystemArgs),
 		Theme:              merged.Theme,
 		ConfigPath:         configPath,
 	}
+	settings.Protocol = strings.ToLower(settings.Protocol)
+	settings.Backend = strings.ToLower(settings.Backend)
 
 	if settings.Interval <= 0 {
 		return Settings{}, errors.New("interval must be positive")
@@ -253,6 +276,19 @@ func MergeSettings(defaults Config, fileCfg Config, cli CLIOverrides, configPath
 	if settings.PingQueueCapacity <= 0 {
 		return Settings{}, errors.New("ping_queue_capacity must be positive")
 	}
+	switch settings.Protocol {
+	case "icmp", "tcp", "http", "https":
+	default:
+		return Settings{}, errors.New("ping.protocol must be icmp, tcp, http, or https")
+	}
+	switch settings.Backend {
+	case "system", "native":
+	default:
+		return Settings{}, errors.New("ping.backend must be system or native")
+	}
+	if settings.TCPPort < 1 || settings.TCPPort > 65535 {
+		return Settings{}, errors.New("ping.tcp_port must be between 1 and 65535")
+	}
 
 	return settings, nil
 }
@@ -266,6 +302,8 @@ type CLIOverrides struct {
 	PingQueueCapacity  int
 	MaxHosts           int
 	Backend            string
+	Protocol           string
+	TCPPort            int
 	ThemeName          string
 }
 

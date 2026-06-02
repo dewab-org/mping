@@ -24,7 +24,8 @@ func NewSystemBackend(command string, args []string) *SystemBackend {
 	}
 }
 
-func (b *SystemBackend) Ping(ctx context.Context, hostName string, timeout time.Duration) (PingResult, error) {
+func (b *SystemBackend) Ping(ctx context.Context, target Target, timeout time.Duration) (PingResult, error) {
+	hostName := target.HostName
 	ip, resolvedName := resolveHost(hostName)
 
 	args := b.buildArgs(timeout)

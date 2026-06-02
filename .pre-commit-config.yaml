@@ -1,0 +1,23 @@
+repos:
+  - repo: local
+    hooks:
+      - id: gofmt
+        name: gofmt
+        entry: bash -c 'out="$(gofmt -l "$@")"; if [ -n "$out" ]; then echo "$out"; exit 1; fi' --
+        language: system
+        types: [go]
+      - id: go-vet
+        name: go vet
+        entry: bash -c 'GOCACHE="${GOCACHE:-/tmp/mping-go-build}" go vet ./...'
+        language: system
+        pass_filenames: false
+      - id: go-test
+        name: go test
+        entry: bash -c 'GOCACHE="${GOCACHE:-/tmp/mping-go-build}" go test ./...'
+        language: system
+        pass_filenames: false
+      - id: go-build
+        name: go build
+        entry: bash -c 'GOCACHE="${GOCACHE:-/tmp/mping-go-build}" go build ./cmd/mping'
+        language: system
+        pass_filenames: false

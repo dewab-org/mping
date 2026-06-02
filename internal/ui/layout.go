@@ -13,7 +13,7 @@ func ComputeLayout(totalWidth int) Layout {
 		totalWidth = 80
 	}
 
-	// Column order: Host, IP, RTT, OK, Success%, Success, Fail, LastOK, Error
+	// Column order: Host, Mode, IP, RTT, Status, OK, Success%, Success, Fail, LastOK, Error
 	hostWidth := totalWidth / 2
 	if hostWidth < 12 {
 		hostWidth = 12
@@ -21,8 +21,10 @@ func ComputeLayout(totalWidth int) Layout {
 
 	mins := []int{
 		hostWidth, // Host (takes 50% of width)
+		10,        // Mode
 		15,        // IP
 		8,         // RTT
+		14,        // Status
 		4,         // OK
 		10,        // Success%
 		8,         // Success

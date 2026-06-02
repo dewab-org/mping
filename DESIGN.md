@@ -1,12 +1,12 @@
 ## Overview
 
-`mping` is a terminal TUI for multi-host ping monitoring. It accepts hosts on the CLI and at runtime, pings them concurrently with a pluggable backend, and renders a sortable table showing RTT, success/failure counts, last OK time, and errors. The UI remains responsive via a worker pool and per-host schedulers. Settings (interval, timeout, refresh, sort, theme, backend, system args) can be changed on the fly.
+`mping` is a terminal TUI for multi-host ping monitoring. It accepts hosts on the CLI and at runtime, pings them concurrently with ICMP, TCP, HTTP, or HTTPS probes, and renders a sortable table showing RTT, HTTP status, success/failure counts, last OK time, and errors. The UI remains responsive via a worker pool and per-host schedulers. Settings (protocol, TCP port, interval, timeout, refresh, sort, theme, backend, system args) can be changed on the fly.
 
 ## Core Behavior
-- Hosts accepted via CLI (space/comma/newline), `--file`/`-f` (one per line), and runtime Add Hosts dialog.
+- Hosts accepted via CLI (space/comma/newline), `--file`/`-f` (one per line), and runtime Add Hosts dialog. Entries can override global defaults with `tcp:host:port`, `tcp://host:port`, bare `host:port`, `icmp:host`, or HTTP(S) URLs.
 - Delete selected host.
 - Per-host scheduler submits jobs to a shared worker pool.
-- Pluggable ping backend: system ping (default) or native Go ping.
+- Probe protocol: ICMP (default), TCP connect, HTTP, or HTTPS. ICMP can use system ping or native Go ping.
 - Records success/failure counts, RTT, last error, last OK time, IP, resolved name.
 - Shared state: map + ordered slice, protected by RWMutex.
 - Sorting: hostname, IP, RTT, success, success%, failure, last OK, error; asc/desc.
@@ -14,11 +14,11 @@
 
 ## UI
 - Layout: Title bar (top), table (center) with vertical scrollbar, status bar (bottom).
-- Table columns: Hostname (resolved, `-n/a-` if absent), IP, RTT (2 decimals), OK, Success%, Success, Fail, Last OK (elapsed), Error (clamped, no horizontal scroll).
-- Title shows backend, sort, workers, interval, timeout, refresh, theme, config path.
+- Table columns: Hostname (resolved, `-n/a-` if absent), Mode, IP, RTT (2 decimals), Status, OK, Success%, Success, Fail, Last OK (elapsed), Error (clamped, no horizontal scroll).
+- Title shows mode, sort, workers, interval, timeout, refresh, theme, config path.
 - Status bar shows keybindings.
 - Modals: Add hosts, interval, timeout, sort, help, settings.
-- Settings modal with sections: Ping (backend, interval, timeout, system args), Sort (key/dir), Display (theme, refresh). Height is computed from form items + buttons (no scrolling); tab order reaches all fields including sort direction.
+- Settings modal with sections: Ping (protocol, TCP port, ICMP backend, interval, timeout, system args), Sort (key/dir), Display (theme, refresh). Height is computed from form items + buttons (no scrolling); tab order reaches all fields including sort direction.
 - Keys: arrows/PageUp/PageDown for selection; a add; d delete; o sort; s settings; r reverse sort; i interval; t timeout; h/? help; q/Ctrl+C quit.
 
 ## Themes
@@ -39,7 +39,7 @@
   3. `$HOME/.config/mping/config.yaml` (XDG default).
   4. Legacy fallback: `$HOME/.mping/config.yaml`.
 - If not found, built-in defaults apply.
-- Config keys (subset): `interval_seconds`, `timeout_seconds`, `refresh_seconds`, `ping.backend`, `concurrency.*`, `memory.*`, `ping.*`, `theme` (name), `themes` (inline definitions matching theme keys).
+- Config keys (subset): `interval_seconds`, `timeout_seconds`, `refresh_seconds`, `ping.protocol`, `ping.tcp_port`, `ping.backend`, `concurrency.*`, `memory.*`, `ping.*`, `theme` (name), `themes` (inline definitions matching theme keys).
 - System ping args are unified (`system_args`); OS defaults are applied if absent.
 
 ## Concurrency Model
@@ -53,12 +53,14 @@
 - Interface:
   ```go
   type PingBackend interface {
-      Ping(ctx context.Context, hostName string, timeout time.Duration) (PingResult, error)
+      Ping(ctx context.Context, target ping.Target, timeout time.Duration) (PingResult, error)
   }
   ```
   `PingResult` includes IP, resolved name, RTT, success, raw error.
-- System backend: OS ping with context timeout; Linux `-w`, macOS `-W`.
-- Native backend: Go ping library; respects timeout; mirrors DNS behavior.
+- ICMP system backend: OS ping with context timeout; Linux `-w`, macOS `-W`.
+- ICMP native backend: Go ping library; respects timeout; mirrors DNS behavior.
+- TCP backend: opens a TCP connection to the configured port, or a host-specific `host:port` value when supplied.
+- HTTP(S) backend: performs a GET request, does not follow redirects, and records the returned status code/text.
 
 ## Startup / Shutdown
 - Parse flags; load/merge config; resolve theme; init state; start workers & schedulers; build UI; run tview app.

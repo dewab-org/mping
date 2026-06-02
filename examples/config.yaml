@@ -14,10 +14,11 @@ memory:
   max_hosts_tracked: 0
 
 ping:
+  protocol: "icmp" # icmp, tcp, http, or https
+  tcp_port: 443
   backend: "system"
   system_command: "ping"
-  system_args_linux: ["-c", "1"]
-  system_args_darwin: ["-c", "1"]
+  system_args: ["-c", "1"]
 
 theme: "default"
 themes:

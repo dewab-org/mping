@@ -24,7 +24,7 @@ func (m ModalBuilder) AddHostsModal(submit func(string), cancel func()) tview.Pr
 	})
 	form.AddButton("Cancel", cancel)
 	form.SetCancelFunc(cancel)
-	form.SetBorder(true).SetTitle("Add Hosts")
+	form.SetBorder(true).SetTitle("Add Hosts (host, host:port, tcp:host:port, icmp:host, URL)")
 	form.SetTitleColor(m.Theme.ModalBorderForeground)
 	form.SetBorderColor(m.Theme.ModalBorderBackground)
 	applyButtonStyles(form, m.Theme)
@@ -119,7 +119,7 @@ func (m ModalBuilder) HelpModal(cancel func()) tview.Primitive {
 		"a: Add hosts",
 		"d: Delete selected host",
 		"o: Sort options",
-		"s: Settings",
+		"s: Settings (protocol, TCP port, timing, display)",
 		"r: Reverse sort direction",
 		"i: Set interval",
 		"t: Set timeout",
@@ -161,18 +161,34 @@ func (m ModalBuilder) SettingsModal(
 	interval,
 	timeout,
 	refresh string,
+	protocol string,
+	tcpPort string,
 	backend string,
 	sysArgs string,
 	themes []string,
 	currentTheme string,
-	submit func(state.SortKey, state.SortDirection, string, string, string, string, string, string),
+	submit func(state.SortKey, state.SortDirection, string, string, string, string, string, string, string, string),
 	cancel func(),
 ) tview.Primitive {
 	form := tview.NewForm()
 	form.SetItemPadding(0)
 
 	form.AddTextView("Ping", "[::b]Ping[::-]", 0, 1, true, false)
-	backendDrop := tview.NewDropDown().SetLabel("Backend").SetOptions([]string{"system", "native"}, nil)
+	protocolOptions := []string{"icmp", "tcp", "http", "https"}
+	protocolDrop := tview.NewDropDown().SetLabel("Protocol").SetOptions(protocolOptions, nil)
+	switch protocol {
+	case "tcp":
+		protocolDrop.SetCurrentOption(1)
+	case "http":
+		protocolDrop.SetCurrentOption(2)
+	case "https":
+		protocolDrop.SetCurrentOption(3)
+	default:
+		protocolDrop.SetCurrentOption(0)
+	}
+	form.AddFormItem(protocolDrop)
+	form.AddInputField("TCP Port", tcpPort, 6, nil, nil)
+	backendDrop := tview.NewDropDown().SetLabel("ICMP Backend").SetOptions([]string{"system", "native"}, nil)
 	if backend == "native" {
 		backendDrop.SetCurrentOption(1)
 	} else {
@@ -241,12 +257,17 @@ func (m ModalBuilder) SettingsModal(
 
 		refreshVal := form.GetFormItemByLabel("Refresh (s)").(*tview.InputField).GetText()
 		argsVal := form.GetFormItemByLabel("System Args").(*tview.InputField).GetText()
+		selectedProtocol := "icmp"
+		if idx, option := protocolDrop.GetCurrentOption(); idx >= 0 {
+			selectedProtocol = option
+		}
+		tcpPortVal := form.GetFormItemByLabel("TCP Port").(*tview.InputField).GetText()
 		selectedBackend := "system"
 		if idx, option := backendDrop.GetCurrentOption(); idx >= 0 {
 			selectedBackend = option
 		}
 
-		submit(selectedKey, selectedDir, intervalVal, timeoutVal, refreshVal, selectedTheme, selectedBackend, argsVal)
+		submit(selectedKey, selectedDir, intervalVal, timeoutVal, refreshVal, selectedTheme, selectedProtocol, tcpPortVal, selectedBackend, argsVal)
 	})
 	form.AddButton("Cancel", cancel)
 	form.SetCancelFunc(cancel)

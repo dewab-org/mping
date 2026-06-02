@@ -23,6 +23,8 @@ import (
 	uiPkg "mping/internal/ui"
 )
 
+const version = "v0.1.0"
+
 func main() {
 	var (
 		intervalVal  int
@@ -30,6 +32,8 @@ func main() {
 		configFlag   = flag.String("config", "", "path to config file")
 		fileFlag     = flag.String("file", "", "path to file with one host per line")
 		backendFlag  = flag.String("backend", "", "ping backend (system|native)")
+		protocolFlag = flag.String("protocol", "", "ping protocol (icmp|tcp|http|https)")
+		tcpPortFlag  = flag.Int("tcp-port", 0, "TCP port for tcp protocol")
 		workersFlag  = flag.Int("max-concurrent-pings", 0, "worker pool size")
 		queueFlag    = flag.Int("ping-queue-capacity", 0, "ping queue capacity")
 		maxHostsFlag = flag.Int("max-hosts", 0, "maximum hosts (0 = unlimited)")
@@ -51,12 +55,15 @@ func main() {
 
 	flag.Usage = func() {
 		fmt.Fprintf(flag.CommandLine.Output(), "Usage: mping [options] host1 host2 ...\n\n")
-		fmt.Fprintf(flag.CommandLine.Output(), "Provide hosts as space-separated positional arguments (domains or IPs).\n\n")
+		fmt.Fprintf(flag.CommandLine.Output(), "Provide hosts as space-separated positional arguments (domains, IPs, tcp:host:port, icmp:host, or URLs).\n\n")
 		fmt.Fprintf(flag.CommandLine.Output(), "Options:\n")
 		flag.PrintDefaults()
 		fmt.Fprintln(flag.CommandLine.Output(), "\nExamples:")
 		fmt.Fprintln(flag.CommandLine.Output(), "  mping example.com 1.1.1.1")
 		fmt.Fprintln(flag.CommandLine.Output(), "  mping --backend native host1 host2")
+		fmt.Fprintln(flag.CommandLine.Output(), "  mping --protocol tcp --tcp-port 443 example.com")
+		fmt.Fprintln(flag.CommandLine.Output(), "  mping example.com tcp:api.example.com:8443 icmp:router.local")
+		fmt.Fprintln(flag.CommandLine.Output(), "  mping https://example.com/health http://localhost:8080/status")
 	}
 	versionFlag := flag.Bool("version", false, "show version")
 	flag.Parse()
@@ -66,7 +73,7 @@ func main() {
 		return
 	}
 	if *versionFlag {
-		fmt.Println("mping v0.0.2")
+		fmt.Println("mping " + version)
 		return
 	}
 	// themeDirs defined after config parsing; postpone listThemes handling
@@ -115,6 +122,8 @@ func main() {
 		PingQueueCapacity:  *queueFlag,
 		MaxHosts:           *maxHostsFlag,
 		Backend:            *backendFlag,
+		Protocol:           *protocolFlag,
+		TCPPort:            *tcpPortFlag,
 		ThemeName:          coalesce(*themeFlag, *themeShort),
 	}
 
@@ -154,14 +163,22 @@ func main() {
 	st := state.NewSharedState(settings.MaxHosts)
 
 	hosts := append(fileHosts, flag.Args()...)
+	hostKeys := make([]string, 0, len(hosts))
 	for _, h := range hosts {
-		_ = st.AddHost(h, settings.Interval, settings.Timeout)
+		spec, err := state.ParseHostSpec(h, settings.Protocol, settings.TCPPort)
+		if err != nil {
+			log.Fatalf("invalid host %q: %v", h, err)
+		}
+		if err := st.AddHostSpec(spec, settings.Interval, settings.Timeout); err != nil {
+			log.Fatalf("add host %q: %v", h, err)
+		}
+		hostKeys = append(hostKeys, spec.Key)
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	backend := chooseBackend(settings)
+	backend := ping.NewMultiBackend(modeConfig(settings))
 	var ui *uiPkg.UI
 	var dirty int32
 	var refreshNs int64 = settings.RefreshInterval.Nanoseconds()
@@ -172,7 +189,7 @@ func main() {
 	})
 	schedulers := concurrency.NewSchedulerGroup(ctx, st, pool)
 
-	for _, h := range hosts {
+	for _, h := range hostKeys {
 		schedulers.Start(h)
 	}
 
@@ -180,8 +197,12 @@ func main() {
 		AddHosts: func(text string) {
 			parts := splitHosts(text)
 			for _, p := range parts {
-				if err := st.AddHost(p, settings.Interval, settings.Timeout); err == nil {
-					schedulers.Start(p)
+				spec, err := state.ParseHostSpec(p, settings.Protocol, settings.TCPPort)
+				if err != nil {
+					continue
+				}
+				if err := st.AddHostSpec(spec, settings.Interval, settings.Timeout); err == nil {
+					schedulers.Start(spec.Key)
 				}
 			}
 			if ui != nil {
@@ -250,15 +271,24 @@ func main() {
 			}
 			markDirty()
 		},
-		SetBackend: func(name, argsLinux, argsDarwin string) {
+		SetBackend: func(name, argsLinux, protocol string, tcpPort int) {
 			if name != "" {
-				settings.Backend = name
+				settings.Backend = strings.ToLower(name)
+			}
+			if protocol != "" {
+				settings.Protocol = strings.ToLower(protocol)
+			}
+			if tcpPort > 0 {
+				settings.TCPPort = tcpPort
 			}
 			if strings.TrimSpace(argsLinux) != "" {
 				settings.SystemArgs = strings.Fields(argsLinux)
 			}
+			backend.Update(modeConfig(settings))
 			if ui != nil {
 				ui.Config.Backend = settings.Backend
+				ui.Config.Protocol = settings.Protocol
+				ui.Config.TCPPort = settings.TCPPort
 				ui.Config.SystemArgs = settings.SystemArgs
 			}
 			markDirty()
@@ -299,12 +329,13 @@ func main() {
 	pool.Close()
 }
 
-func chooseBackend(settings config.Settings) ping.PingBackend {
-	switch strings.ToLower(settings.Backend) {
-	case "native":
-		return ping.NewNativeBackend()
-	default:
-		return ping.NewSystemBackend(settings.SystemCommand, settings.SystemArgs)
+func modeConfig(settings config.Settings) ping.ModeConfig {
+	return ping.ModeConfig{
+		Protocol:      settings.Protocol,
+		ICMPBackend:   settings.Backend,
+		SystemCommand: settings.SystemCommand,
+		SystemArgs:    settings.SystemArgs,
+		TCPPort:       settings.TCPPort,
 	}
 }
 

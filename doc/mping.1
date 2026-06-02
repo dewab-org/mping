@@ -1,4 +1,4 @@
-.TH MPING 1 "January 2025" "mping 0.01" "User Commands"
+.TH MPING 1 "June 2026" "mping 0.1.0" "User Commands"
 .SH NAME
 mping \- terminal UI for multi-host ping monitoring
 .SH SYNOPSIS
@@ -6,7 +6,7 @@ mping \- terminal UI for multi-host ping monitoring
 [options] [hosts...]
 .SH DESCRIPTION
 .B mping
-is a terminal user interface (TUI) that pings multiple hosts concurrently, displaying RTT, success/failure counts, last OK time, and errors. Hosts can be added or removed at runtime.
+is a terminal user interface (TUI) that pings multiple hosts concurrently, displaying RTT, HTTP status, success/failure counts, last OK time, and errors. Hosts can be added or removed at runtime. Host entries may use per-host overrides such as tcp:example.com:443, tcp://example.com:8443, example.com:443, icmp:example.com, https://example.com/health, or http://localhost:8080/status.
 .SH OPTIONS
 .TP
 .B \-\-interval, \-i \fISECONDS\fR
@@ -18,8 +18,14 @@ Default ping timeout (default 2).
 .B \-\-refresh, \-R \fISECONDS\fR
 Screen refresh interval (default 1).
 .TP
+.B \-\-protocol \fI(icmp|tcp|http|https)\fR
+Select probe protocol (default icmp).
+.TP
+.B \-\-tcp-port \fIPORT\fR
+TCP port for TCP probes (default 443).
+.TP
 .B \-\-backend \fI(system|native)\fR
-Select ping backend (default system).
+Select ICMP ping backend (default system).
 .TP
 .B \-\-max-concurrent-pings \fIN\fR
 Worker pool size (default 64).

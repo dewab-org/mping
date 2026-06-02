@@ -6,14 +6,29 @@ NAME := mping
 SRC := ./cmd/mping
 THEMES := $(wildcard themes/*.theme)
 MANPAGE := doc/mping.1
+GOCACHE ?= /tmp/mping-go-build
 
-.PHONY: all build install clean
+.PHONY: all build lint test validate install clean
 
 all: build
 
 build:
 	@echo "Building $(NAME)..."
-	go build -o $(NAME) $(SRC)
+	GOCACHE=$(GOCACHE) go build -o $(NAME) $(SRC)
+
+lint:
+	@echo "Checking Go formatting..."
+	@test -z "$$(gofmt -l $$(find . -path './macos' -prune -o -name '*.go' -print))"
+	@echo "Running go vet..."
+	GOCACHE=$(GOCACHE) go vet ./...
+
+test:
+	@echo "Running Go tests..."
+	GOCACHE=$(GOCACHE) go test ./...
+
+validate: lint test
+	@echo "Validating build..."
+	GOCACHE=$(GOCACHE) go build ./cmd/mping
 
 install: build
 	@echo "Installing $(NAME) to $(BIN_DIR)..."

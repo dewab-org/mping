@@ -24,7 +24,7 @@ type Callbacks struct {
 	SetSort            func(state.SortKey, state.SortDirection)
 	ReverseSort        func()
 	SetTheme           func(string)
-	SetBackend         func(string, string, string)
+	SetBackend         func(string, string, string, int)
 	Quit               func()
 }
 
@@ -133,9 +133,15 @@ func (u *UI) renderTitle() {
 	if dir == state.SortDesc {
 		dirSymbol = "↓"
 	}
-	title := fmt.Sprintf(" multiping (mping) | hosts: %d | backend: %s | sort: %s%s | workers: %d | interval: %s | timeout: %s | refresh: %s | theme: %s | config: %s ",
+	mode := u.Config.Protocol
+	if mode == "tcp" {
+		mode = fmt.Sprintf("tcp:%d", u.Config.TCPPort)
+	} else if mode == "icmp" {
+		mode = fmt.Sprintf("icmp/%s", u.Config.Backend)
+	}
+	title := fmt.Sprintf(" mping | hosts: %d | mode: %s | sort: %s%s | workers: %d | interval: %s | timeout: %s | refresh: %s | theme: %s | config: %s ",
 		u.State.Count(),
-		u.Config.Backend,
+		mode,
 		key, dirSymbol,
 		u.Config.MaxConcurrentPings,
 		u.Config.Interval,
@@ -162,7 +168,7 @@ func (u *UI) renderTable() {
 	u.Table.Clear()
 	snap := u.State.Snapshot()
 	u.lastRowCount = len(snap) + 1
-	header := []string{"Hostname", "IP", "RTT", "OK", "Success%", "Success", "Fail", "Last OK", "Error"}
+	header := []string{"Hostname", "Mode", "IP", "RTT", "Status", "OK", "Success%", "Success", "Fail", "Last OK", "Error"}
 	for c, h := range header {
 		cell := tview.NewTableCell(h).
 			SetTextColor(u.Theme.HeaderForeground).
@@ -202,8 +208,10 @@ func (u *UI) renderTable() {
 
 		values := []string{
 			resolved,
+			modeLabel(host.Protocol, host.TCPPort),
 			host.IP,
 			fmt.Sprintf("%.2fs", host.LastRTT.Seconds()),
+			statusLabel(host.LastStatus),
 			okText,
 			fmt.Sprintf("%.1f%%", successPct),
 			strconv.FormatInt(host.SuccessCount, 10),
@@ -220,7 +228,7 @@ func (u *UI) renderTable() {
 				cell.SetMaxWidth(u.layoutInfo.ColumnWidths[c])
 				cell.SetExpansion(0)
 			}
-			if c == 3 { // OK column
+			if c == 5 { // OK column
 				cell.SetTextColor(okColor)
 			}
 			if row%2 == 0 {
@@ -233,6 +241,20 @@ func (u *UI) renderTable() {
 		u.Table.SetOffset(rowOffset, 0)
 	}
 	u.updateScrollBar()
+}
+
+func modeLabel(protocol string, tcpPort int) string {
+	if protocol == "tcp" {
+		return fmt.Sprintf("tcp:%d", tcpPort)
+	}
+	return protocol
+}
+
+func statusLabel(status string) string {
+	if strings.TrimSpace(status) == "" {
+		return "-"
+	}
+	return status
 }
 
 func humanSince(t time.Time) string {
@@ -364,11 +386,13 @@ func (u *UI) showSettings() {
 		fmt.Sprintf("%.0f", u.Config.Interval.Seconds()),
 		fmt.Sprintf("%.0f", u.Config.Timeout.Seconds()),
 		fmt.Sprintf("%.0f", u.Config.RefreshInterval.Seconds()),
+		u.Config.Protocol,
+		fmt.Sprintf("%d", u.Config.TCPPort),
 		u.Config.Backend,
 		strings.Join(u.Config.SystemArgs, " "),
 		u.Themes,
 		u.ThemeName,
-		func(k state.SortKey, d state.SortDirection, intervalVal, timeoutVal, refreshVal, themeVal, backendVal, argsVal string) {
+		func(k state.SortKey, d state.SortDirection, intervalVal, timeoutVal, refreshVal, themeVal, protocolVal, tcpPortVal, backendVal, argsVal string) {
 			if secs, err := strconv.Atoi(intervalVal); err == nil && u.Callbacks.SetInterval != nil {
 				u.Callbacks.SetInterval(time.Duration(secs) * time.Second)
 			}
@@ -383,7 +407,8 @@ func (u *UI) showSettings() {
 				u.ThemeName = themeVal
 			}
 			if u.Callbacks.SetBackend != nil {
-				u.Callbacks.SetBackend(backendVal, argsVal, "")
+				tcpPort, _ := strconv.Atoi(tcpPortVal)
+				u.Callbacks.SetBackend(backendVal, argsVal, protocolVal, tcpPort)
 			}
 			if u.Callbacks.SetSort != nil {
 				u.Callbacks.SetSort(k, d)
