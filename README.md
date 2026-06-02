@@ -1,6 +1,6 @@
 # mping
 
-![Build](https://github.com/dewab/mping/actions/workflows/build.yml/badge.svg)
+![Build](https://github.com/dewab-org/mping/actions/workflows/build.yml/badge.svg)
 
 `multiping` (binary `mping`) is a terminal UI for multi-host monitoring. It probes ICMP, TCP, HTTP, and HTTPS targets concurrently, shows status, success/failure counters, and RTTs, and lets you add/remove targets at runtime.
 
@@ -40,8 +40,9 @@ The same checks are available through `make validate`.
 
 ### Releases
 
-- Tagged `v*` builds publish per-platform tarballs.
-- Nightly builds from `main` publish `mping-<os>-<arch>.tar.gz`.
+- Tagged `v*` builds publish per-platform tarballs to <https://github.com/dewab-org/mping/releases>.
+- Nightly builds from `main` publish `mping-<os>-<arch>.tar.gz` to the `nightly` release in <https://github.com/dewab-org/mping/releases>.
+- Workflow runs and build artifacts are available at <https://github.com/dewab-org/mping/actions>.
 - Targets: Linux amd64/arm64, macOS arm64 (statically linked).
 
 ### macOS GUI (Swift)
