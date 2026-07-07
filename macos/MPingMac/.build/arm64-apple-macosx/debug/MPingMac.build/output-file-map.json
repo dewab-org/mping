@@ -1,0 +1,138 @@
+{
+  "": {
+    "swift-dependencies": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/master.swiftdeps"
+  },
+  "/Users/daniel/work/mping/macos/MPingMac/Sources/MPingMac/MPingMacApp.swift": {
+    "dependencies": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/MPingMacApp.d",
+    "object": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/MPingMacApp.swift.o",
+    "swiftmodule": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/MPingMacApp~partial.swiftmodule",
+    "swift-dependencies": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/MPingMacApp.swiftdeps",
+    "diagnostics": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/MPingMacApp.dia"
+  },
+  "/Users/daniel/work/mping/macos/MPingMac/Sources/MPingMac/Models/ColumnKey.swift": {
+    "dependencies": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/ColumnKey.d",
+    "object": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/ColumnKey.swift.o",
+    "swiftmodule": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/ColumnKey~partial.swiftmodule",
+    "swift-dependencies": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/ColumnKey.swiftdeps",
+    "diagnostics": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/ColumnKey.dia"
+  },
+  "/Users/daniel/work/mping/macos/MPingMac/Sources/MPingMac/Models/Host.swift": {
+    "dependencies": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/Host.d",
+    "object": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/Host.swift.o",
+    "swiftmodule": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/Host~partial.swiftmodule",
+    "swift-dependencies": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/Host.swiftdeps",
+    "diagnostics": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/Host.dia"
+  },
+  "/Users/daniel/work/mping/macos/MPingMac/Sources/MPingMac/Models/MonitoringSettings.swift": {
+    "dependencies": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/MonitoringSettings.d",
+    "object": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/MonitoringSettings.swift.o",
+    "swiftmodule": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/MonitoringSettings~partial.swiftmodule",
+    "swift-dependencies": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/MonitoringSettings.swiftdeps",
+    "diagnostics": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/MonitoringSettings.dia"
+  },
+  "/Users/daniel/work/mping/macos/MPingMac/Sources/MPingMac/Models/PingResult.swift": {
+    "dependencies": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/PingResult.d",
+    "object": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/PingResult.swift.o",
+    "swiftmodule": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/PingResult~partial.swiftmodule",
+    "swift-dependencies": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/PingResult.swiftdeps",
+    "diagnostics": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/PingResult.dia"
+  },
+  "/Users/daniel/work/mping/macos/MPingMac/Sources/MPingMac/Models/PingSample.swift": {
+    "dependencies": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/PingSample.d",
+    "object": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/PingSample.swift.o",
+    "swiftmodule": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/PingSample~partial.swiftmodule",
+    "swift-dependencies": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/PingSample.swiftdeps",
+    "diagnostics": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/PingSample.dia"
+  },
+  "/Users/daniel/work/mping/macos/MPingMac/Sources/MPingMac/Services/ConcurrencyGate.swift": {
+    "dependencies": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/ConcurrencyGate.d",
+    "object": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/ConcurrencyGate.swift.o",
+    "swiftmodule": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/ConcurrencyGate~partial.swiftmodule",
+    "swift-dependencies": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/ConcurrencyGate.swiftdeps",
+    "diagnostics": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/ConcurrencyGate.dia"
+  },
+  "/Users/daniel/work/mping/macos/MPingMac/Sources/MPingMac/Services/PingBackend.swift": {
+    "dependencies": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/PingBackend.d",
+    "object": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/PingBackend.swift.o",
+    "swiftmodule": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/PingBackend~partial.swiftmodule",
+    "swift-dependencies": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/PingBackend.swiftdeps",
+    "diagnostics": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/PingBackend.dia"
+  },
+  "/Users/daniel/work/mping/macos/MPingMac/Sources/MPingMac/Utilities/NotificationHelper.swift": {
+    "dependencies": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/NotificationHelper.d",
+    "object": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/NotificationHelper.swift.o",
+    "swiftmodule": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/NotificationHelper~partial.swiftmodule",
+    "swift-dependencies": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/NotificationHelper.swiftdeps",
+    "diagnostics": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/NotificationHelper.dia"
+  },
+  "/Users/daniel/work/mping/macos/MPingMac/Sources/MPingMac/Utilities/SoundLibrary.swift": {
+    "dependencies": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/SoundLibrary.d",
+    "object": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/SoundLibrary.swift.o",
+    "swiftmodule": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/SoundLibrary~partial.swiftmodule",
+    "swift-dependencies": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/SoundLibrary.swiftdeps",
+    "diagnostics": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/SoundLibrary.dia"
+  },
+  "/Users/daniel/work/mping/macos/MPingMac/Sources/MPingMac/ViewModels/HostStore.swift": {
+    "dependencies": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/HostStore.d",
+    "object": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/HostStore.swift.o",
+    "swiftmodule": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/HostStore~partial.swiftmodule",
+    "swift-dependencies": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/HostStore.swiftdeps",
+    "diagnostics": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/HostStore.dia"
+  },
+  "/Users/daniel/work/mping/macos/MPingMac/Sources/MPingMac/Views/AddHostsWindow.swift": {
+    "dependencies": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/AddHostsWindow.d",
+    "object": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/AddHostsWindow.swift.o",
+    "swiftmodule": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/AddHostsWindow~partial.swiftmodule",
+    "swift-dependencies": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/AddHostsWindow.swiftdeps",
+    "diagnostics": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/AddHostsWindow.dia"
+  },
+  "/Users/daniel/work/mping/macos/MPingMac/Sources/MPingMac/Views/ContentView.swift": {
+    "dependencies": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/ContentView.d",
+    "object": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/ContentView.swift.o",
+    "swiftmodule": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/ContentView~partial.swiftmodule",
+    "swift-dependencies": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/ContentView.swiftdeps",
+    "diagnostics": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/ContentView.dia"
+  },
+  "/Users/daniel/work/mping/macos/MPingMac/Sources/MPingMac/Views/PingHistoryPanel.swift": {
+    "dependencies": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/PingHistoryPanel.d",
+    "object": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/PingHistoryPanel.swift.o",
+    "swiftmodule": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/PingHistoryPanel~partial.swiftmodule",
+    "swift-dependencies": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/PingHistoryPanel.swiftdeps",
+    "diagnostics": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/PingHistoryPanel.dia"
+  },
+  "/Users/daniel/work/mping/macos/MPingMac/Sources/MPingMac/Views/PortPanelController.swift": {
+    "dependencies": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/PortPanelController.d",
+    "object": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/PortPanelController.swift.o",
+    "swiftmodule": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/PortPanelController~partial.swiftmodule",
+    "swift-dependencies": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/PortPanelController.swiftdeps",
+    "diagnostics": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/PortPanelController.dia"
+  },
+  "/Users/daniel/work/mping/macos/MPingMac/Sources/MPingMac/Views/SettingsView.swift": {
+    "dependencies": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/SettingsView.d",
+    "object": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/SettingsView.swift.o",
+    "swiftmodule": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/SettingsView~partial.swiftmodule",
+    "swift-dependencies": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/SettingsView.swiftdeps",
+    "diagnostics": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/SettingsView.dia"
+  },
+  "/Users/daniel/work/mping/macos/MPingMac/Sources/MPingMac/Views/SettingsWindow.swift": {
+    "dependencies": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/SettingsWindow.d",
+    "object": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/SettingsWindow.swift.o",
+    "swiftmodule": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/SettingsWindow~partial.swiftmodule",
+    "swift-dependencies": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/SettingsWindow.swiftdeps",
+    "diagnostics": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/SettingsWindow.dia"
+  },
+  "/Users/daniel/work/mping/macos/MPingMac/Sources/MPingMac/Views/SparklineView.swift": {
+    "dependencies": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/SparklineView.d",
+    "object": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/SparklineView.swift.o",
+    "swiftmodule": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/SparklineView~partial.swiftmodule",
+    "swift-dependencies": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/SparklineView.swiftdeps",
+    "diagnostics": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/SparklineView.dia"
+  },
+  "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/DerivedSources/resource_bundle_accessor.swift": {
+    "dependencies": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/resource_bundle_accessor.d",
+    "object": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/resource_bundle_accessor.swift.o",
+    "swiftmodule": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/resource_bundle_accessor~partial.swiftmodule",
+    "swift-dependencies": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/resource_bundle_accessor.swiftdeps",
+    "diagnostics": "/Users/daniel/work/mping/macos/MPingMac/.build/arm64-apple-macosx/debug/MPingMac.build/resource_bundle_accessor.dia"
+  }
+}
