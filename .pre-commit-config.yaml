@@ -21,3 +21,8 @@ repos:
         entry: bash -c 'GOCACHE="${GOCACHE:-/tmp/mping-go-build}" go build ./cmd/mping'
         language: system
         pass_filenames: false
+
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.0
+    hooks:
+      - id: gitleaks
