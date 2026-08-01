@@ -18,7 +18,7 @@ build:
 
 lint:
 	@echo "Checking Go formatting..."
-	@test -z "$$(gofmt -l $$(find . -path './macos' -prune -o -name '*.go' -print))"
+	@test -z "$$(gofmt -l $$(find . -name '*.go' -print))"
 	@echo "Running go vet..."
 	GOCACHE=$(GOCACHE) go vet ./...
 

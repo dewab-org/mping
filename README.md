@@ -47,14 +47,7 @@ The same checks are available through `make validate`.
 
 ### macOS GUI (Swift)
 
-A SwiftUI desktop client that mirrors the core mping experience lives in `macos/MPingMac`. Build and run with:
-
-```bash
-cd macos/MPingMac
-swift run MPingMac
-```
-
-The GUI uses the system `ping` binary and follows macOS UI conventions (toolbar actions, Settings window).
+A SwiftUI desktop client that mirrors the core mping experience lives in its own repository: <https://github.com/dewab-org/mping-mac>.
 
 ## Demo
 

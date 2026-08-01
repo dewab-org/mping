@@ -13,4 +13,3 @@ vendor/
 .idea/
 .vscode/
 *.swp
-macos/MPingMac/.build/
