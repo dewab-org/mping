@@ -1,0 +1,16 @@
+# Catppuccin Mocha (dark) — https://catppuccin.com
+title_background=#181825
+title_foreground=#cdd6f4
+status_background=#181825
+status_foreground=#cdd6f4
+header_background=#313244
+header_foreground=#b4befe
+row_foreground=#cdd6f4
+ok_text_success=#a6e3a1
+ok_text_failure=#f38ba8
+modal_border_background=#313244
+modal_border_foreground=#b4befe
+button_ok_background=#a6e3a1
+button_ok_foreground=#1e1e2e
+button_cancel_background=#f38ba8
+button_cancel_foreground=#1e1e2e
