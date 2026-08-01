@@ -307,6 +307,10 @@ func main() {
 	})
 	app.SetRoot(ui.Pages, true)
 
+	if len(hostKeys) == 0 {
+		ui.ShowWelcome()
+	}
+
 	// Periodic redraw decoupled from ping interval for smoothness.
 	go func() {
 		for {
