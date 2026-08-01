@@ -436,9 +436,24 @@ func (u *UI) showHelp() {
 }
 
 // ShowWelcome displays the getting-started splash shown when mping starts
-// without any hosts to monitor. Any key press closes it.
+// without any hosts to monitor. The advertised keys (a, s, h/?, q) perform
+// their actions directly; any other key just closes the splash.
 func (u *UI) ShowWelcome() {
-	modal := u.Builder.WelcomeModal(u.closeModal)
+	modal := u.Builder.WelcomeModal(func(r rune) {
+		u.closeModal()
+		switch r {
+		case 'a':
+			u.showAddHosts()
+		case 's':
+			u.showSettings()
+		case 'h', '?':
+			u.showHelp()
+		case 'q':
+			if u.Callbacks.Quit != nil {
+				u.Callbacks.Quit()
+			}
+		}
+	}, u.closeModal)
 	u.Pages.AddPage("welcome", modal, true, true)
 	u.App.SetFocus(modal)
 }

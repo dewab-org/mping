@@ -155,7 +155,7 @@ func (m ModalBuilder) HelpModal(cancel func()) tview.Primitive {
 	return box
 }
 
-func (m ModalBuilder) WelcomeModal(cancel func()) tview.Primitive {
+func (m ModalBuilder) WelcomeModal(action func(rune), cancel func()) tview.Primitive {
 	welcomeText := strings.Join([]string{
 		"No hosts are being monitored yet. To get started, press:",
 		"",
@@ -182,11 +182,16 @@ func (m ModalBuilder) WelcomeModal(cancel func()) tview.Primitive {
 
 	frame := tview.NewFrame(text).
 		AddText("", true, tview.AlignLeft, m.Theme.ModalBorderForeground).
-		AddText("[Close] any key", false, tview.AlignRight, m.Theme.ModalBorderForeground)
+		AddText("[a/s/h/q] act  [any other key] close", false, tview.AlignRight, m.Theme.ModalBorderForeground)
 	frame.SetBorders(0, 0, 0, 0, 0, 0)
 
 	box := center(frame, 70, 19)
 	box.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		switch event.Rune() {
+		case 'a', 's', 'h', '?', 'q':
+			action(event.Rune())
+			return nil
+		}
 		cancel()
 		return nil
 	})
