@@ -1,0 +1,16 @@
+# Catppuccin Frappé (dark) — https://catppuccin.com
+title_background=#292c3c
+title_foreground=#c6d0f5
+status_background=#292c3c
+status_foreground=#c6d0f5
+header_background=#414559
+header_foreground=#babbf1
+row_foreground=#c6d0f5
+ok_text_success=#a6d189
+ok_text_failure=#e78284
+modal_border_background=#414559
+modal_border_foreground=#babbf1
+button_ok_background=#a6d189
+button_ok_foreground=#303446
+button_cancel_background=#e78284
+button_cancel_foreground=#303446

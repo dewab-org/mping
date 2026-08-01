@@ -155,6 +155,44 @@ func (m ModalBuilder) HelpModal(cancel func()) tview.Primitive {
 	return box
 }
 
+func (m ModalBuilder) WelcomeModal(cancel func()) tview.Primitive {
+	welcomeText := strings.Join([]string{
+		"No hosts are being monitored yet. To get started, press:",
+		"",
+		"  a        Add hosts (space, comma, or newline separated)",
+		"  s        Settings (protocol, TCP port, timing, theme)",
+		"  h or ?   Full keybinding help",
+		"  q        Quit",
+		"",
+		"Hosts can also be given on the command line:",
+		"",
+		"  mping 1.1.1.1 8.8.8.8",
+		"  mping example.com tcp:example.com:443",
+		"  mping https://example.com/health",
+		"  mping -f hosts.txt",
+	}, "\n")
+
+	text := tview.NewTextView().
+		SetText(welcomeText).
+		SetDynamicColors(true).
+		SetWrap(true)
+	text.SetBorder(true).SetTitle("Welcome to mping")
+	text.SetBorderColor(m.Theme.ModalBorderBackground)
+	text.SetTitleColor(m.Theme.ModalBorderForeground)
+
+	frame := tview.NewFrame(text).
+		AddText("", true, tview.AlignLeft, m.Theme.ModalBorderForeground).
+		AddText("[Close] any key", false, tview.AlignRight, m.Theme.ModalBorderForeground)
+	frame.SetBorders(0, 0, 0, 0, 0, 0)
+
+	box := center(frame, 70, 19)
+	box.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		cancel()
+		return nil
+	})
+	return box
+}
+
 func (m ModalBuilder) SettingsModal(
 	current state.SortKey,
 	dir state.SortDirection,

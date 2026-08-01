@@ -156,7 +156,7 @@ Theme discovery order:
 
 Keys: `title_background`, `title_foreground`, `status_background`, `status_foreground`, `header_background`, `header_foreground`, `row_foreground`, `ok_text_success`, `ok_text_failure`, `modal_border_background`, `modal_border_foreground`, `button_ok_background`, `button_ok_foreground`, `button_cancel_background`, `button_cancel_foreground`.
 
-Examples provided in `themes/`: `default`, `dracula`, `solarized-dark`, `solarized-light`, `nord`.
+Examples provided in `themes/`: `default`, `dracula`, `solarized-dark`, `solarized-light`, `nord`, `catppuccin-latte`, `catppuccin-frappe`, `catppuccin-macchiato`, `catppuccin-mocha`.
 
 You can define themes inline in YAML under `themes:` or via `.theme` files.
 
