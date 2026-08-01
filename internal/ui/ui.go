@@ -435,6 +435,14 @@ func (u *UI) showHelp() {
 	u.App.SetFocus(modal)
 }
 
+// ShowWelcome displays the getting-started splash shown when mping starts
+// without any hosts to monitor. Any key press closes it.
+func (u *UI) ShowWelcome() {
+	modal := u.Builder.WelcomeModal(u.closeModal)
+	u.Pages.AddPage("welcome", modal, true, true)
+	u.App.SetFocus(modal)
+}
+
 func (u *UI) closeModal() {
 	u.Pages.RemovePage("add")
 	u.Pages.RemovePage("interval")
@@ -442,6 +450,7 @@ func (u *UI) closeModal() {
 	u.Pages.RemovePage("sort")
 	u.Pages.RemovePage("settings")
 	u.Pages.RemovePage("help")
+	u.Pages.RemovePage("welcome")
 	u.App.SetFocus(u.Table)
 }
 
