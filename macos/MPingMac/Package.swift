@@ -17,6 +17,11 @@ let package = Package(
             resources: [
                 .process("MPingMac/Resources")
             ]
+        ),
+        .testTarget(
+            name: "MPingMacTests",
+            dependencies: ["MPingMac"],
+            path: "Tests/MPingMacTests"
         )
     ]
 )

@@ -447,7 +447,8 @@ final class HostStore: ObservableObject {
         return ParsedHost(address: split.host, tcpPortOverride: split.port, backend: backend ?? .swiftNative)
     }
 
-    private static func splitHostAndPort(_ raw: String) -> (host: String, port: Int?) {
+    // Internal (not private) for unit testing.
+    static func splitHostAndPort(_ raw: String) -> (host: String, port: Int?) {
         if raw.hasPrefix("["), let closing = raw.firstIndex(of: "]") {
             let hostPart = String(raw[raw.index(after: raw.startIndex)..<closing])
             let remainder = raw[raw.index(after: closing)...]
@@ -476,7 +477,8 @@ final class HostStore: ObservableObject {
         "\(address.lowercased())|\(port.map(String.init) ?? "-")|\(backend.rawValue)"
     }
 
-    private static func ipv4Range(from token: String) -> [String]? {
+    // Internal (not private) for unit testing.
+    static func ipv4Range(from token: String) -> [String]? {
         guard token.contains("-") else { return nil }
         let parts = token.split(separator: "-")
         guard parts.count == 2 else { return nil }
@@ -499,7 +501,8 @@ final class HostStore: ObservableObject {
         return (0..<count).compactMap { offset in IPv4Address(intValue: startInt + offset)?.description }
     }
 
-    private static func cidrRange(from token: String) -> [String]? {
+    // Internal (not private) for unit testing.
+    static func cidrRange(from token: String) -> [String]? {
         let parts = token.split(separator: "/")
         guard parts.count == 2, let ip = IPv4Address(String(parts[0])), let prefix = Int(parts[1]), prefix >= 0, prefix <= 32 else { return nil }
         let hostBits = 32 - prefix

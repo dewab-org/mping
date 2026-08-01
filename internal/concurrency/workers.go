@@ -67,6 +67,13 @@ func (p *WorkerPool) runJob(job PingJob) {
 }
 
 func (p *WorkerPool) Submit(job PingJob) bool {
+	// Check for shutdown first: select picks randomly among ready cases, so
+	// without this a closed pool with queue capacity could still accept jobs.
+	select {
+	case <-p.ctx.Done():
+		return false
+	default:
+	}
 	select {
 	case <-p.ctx.Done():
 		return false

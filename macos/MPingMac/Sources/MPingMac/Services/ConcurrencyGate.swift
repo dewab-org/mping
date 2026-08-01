@@ -1,7 +1,10 @@
 import Foundation
 
 actor ConcurrencyGate {
-    private var available: Int
+    // Tracking permits in use (rather than permits free) lets setLimit take
+    // effect immediately in both directions: raising the limit admits parked
+    // waiters at once, lowering it drains gradually as permits are released.
+    private var inUse = 0
     private var limit: Int
     private var waiters: [(id: UUID, continuation: CheckedContinuation<Void, Error>)] = []
     // IDs cancelled before their continuation was registered (onCancel can
@@ -9,15 +12,11 @@ actor ConcurrencyGate {
     private var cancelledIDs: Set<UUID> = []
 
     init(limit: Int) {
-        let normalized = max(1, limit)
-        self.limit = normalized
-        self.available = normalized
+        self.limit = max(1, limit)
     }
 
     func setLimit(_ newLimit: Int) {
-        let normalized = max(1, newLimit)
-        limit = normalized
-        available = min(available, normalized)
+        limit = max(1, newLimit)
         flushQueue()
     }
 
@@ -27,8 +26,8 @@ actor ConcurrencyGate {
     /// before a permit is granted; a cancelled waiter never consumes a permit.
     func acquire() async throws {
         try Task.checkCancellation()
-        if available > 0 {
-            available -= 1
+        if inUse < limit {
+            inUse += 1
             return
         }
 
@@ -47,12 +46,14 @@ actor ConcurrencyGate {
     }
 
     func release() {
-        if let waiter = waiters.first {
+        // Hand the permit to the oldest waiter unless the limit was lowered
+        // below the in-flight count, in which case concurrency must shrink.
+        if inUse <= limit, let waiter = waiters.first {
             waiters.removeFirst()
             waiter.continuation.resume()
             return
         }
-        available = min(available + 1, limit)
+        inUse -= 1
     }
 
     private func cancelWaiter(_ id: UUID) {
@@ -65,9 +66,9 @@ actor ConcurrencyGate {
     }
 
     private func flushQueue() {
-        while available > 0, !waiters.isEmpty {
+        while inUse < limit, !waiters.isEmpty {
             let waiter = waiters.removeFirst()
-            available -= 1
+            inUse += 1
             waiter.continuation.resume()
         }
     }
