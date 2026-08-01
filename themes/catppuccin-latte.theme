@@ -1,0 +1,16 @@
+# Catppuccin Latte (light) — https://catppuccin.com
+title_background=#e6e9ef
+title_foreground=#4c4f69
+status_background=#e6e9ef
+status_foreground=#4c4f69
+header_background=#ccd0da
+header_foreground=#7287fd
+row_foreground=#4c4f69
+ok_text_success=#40a02b
+ok_text_failure=#d20f39
+modal_border_background=#ccd0da
+modal_border_foreground=#7287fd
+button_ok_background=#40a02b
+button_ok_foreground=#eff1f5
+button_cancel_background=#d20f39
+button_cancel_foreground=#eff1f5

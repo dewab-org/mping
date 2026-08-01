@@ -1,0 +1,16 @@
+# Catppuccin Macchiato (dark) — https://catppuccin.com
+title_background=#1e2030
+title_foreground=#cad3f5
+status_background=#1e2030
+status_foreground=#cad3f5
+header_background=#363a4f
+header_foreground=#b7bdf8
+row_foreground=#cad3f5
+ok_text_success=#a6da95
+ok_text_failure=#ed8796
+modal_border_background=#363a4f
+modal_border_foreground=#b7bdf8
+button_ok_background=#a6da95
+button_ok_foreground=#24273a
+button_cancel_background=#ed8796
+button_cancel_foreground=#24273a
