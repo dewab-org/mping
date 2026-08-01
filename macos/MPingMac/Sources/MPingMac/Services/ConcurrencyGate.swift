@@ -3,7 +3,10 @@ import Foundation
 actor ConcurrencyGate {
     private var available: Int
     private var limit: Int
-    private var waiters: [CheckedContinuation<Void, Never>] = []
+    private var waiters: [(id: UUID, continuation: CheckedContinuation<Void, Error>)] = []
+    // IDs cancelled before their continuation was registered (onCancel can
+    // fire ahead of the withCheckedThrowingContinuation body).
+    private var cancelledIDs: Set<UUID> = []
 
     init(limit: Int) {
         let normalized = max(1, limit)
@@ -18,31 +21,54 @@ actor ConcurrencyGate {
         flushQueue()
     }
 
-    func acquire() async {
+    var hasWaiters: Bool { !waiters.isEmpty }
+
+    /// Waits for a permit. Throws CancellationError if the task is cancelled
+    /// before a permit is granted; a cancelled waiter never consumes a permit.
+    func acquire() async throws {
+        try Task.checkCancellation()
         if available > 0 {
             available -= 1
             return
         }
 
-        await withCheckedContinuation { continuation in
-            waiters.append(continuation)
+        let id = UUID()
+        try await withTaskCancellationHandler {
+            try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+                if cancelledIDs.remove(id) != nil {
+                    continuation.resume(throwing: CancellationError())
+                } else {
+                    waiters.append((id, continuation))
+                }
+            }
+        } onCancel: {
+            Task { await self.cancelWaiter(id) }
         }
     }
 
     func release() {
         if let waiter = waiters.first {
             waiters.removeFirst()
-            waiter.resume()
+            waiter.continuation.resume()
             return
         }
         available = min(available + 1, limit)
+    }
+
+    private func cancelWaiter(_ id: UUID) {
+        if let index = waiters.firstIndex(where: { $0.id == id }) {
+            let waiter = waiters.remove(at: index)
+            waiter.continuation.resume(throwing: CancellationError())
+        } else {
+            cancelledIDs.insert(id)
+        }
     }
 
     private func flushQueue() {
         while available > 0, !waiters.isEmpty {
             let waiter = waiters.removeFirst()
             available -= 1
-            waiter.resume()
+            waiter.continuation.resume()
         }
     }
 }

@@ -19,11 +19,13 @@ type Config struct {
 	RefreshSeconds  int    `yaml:"refresh_seconds"`
 	ThemeName       string `yaml:"theme"`
 
-	Concurrency ConcurrencyConfig      `yaml:"concurrency"`
-	Memory      MemoryConfig           `yaml:"memory"`
-	Ping        PingConfig             `yaml:"ping"`
-	Theme       ThemeConfig            `yaml:"theme"`
-	Themes      map[string]ThemeConfig `yaml:"themes"`
+	Concurrency ConcurrencyConfig `yaml:"concurrency"`
+	Memory      MemoryConfig      `yaml:"memory"`
+	Ping        PingConfig        `yaml:"ping"`
+	// Theme holds the resolved colors; the "theme" YAML key is ThemeName,
+	// and inline color definitions belong under "themes".
+	Theme  ThemeConfig            `yaml:"-"`
+	Themes map[string]ThemeConfig `yaml:"themes"`
 }
 
 type ConcurrencyConfig struct {
@@ -175,6 +177,9 @@ func MergeSettings(defaults Config, fileCfg Config, cli CLIOverrides, configPath
 		}
 		if src.RefreshSeconds > 0 {
 			dst.RefreshSeconds = src.RefreshSeconds
+		}
+		if src.ThemeName != "" {
+			dst.ThemeName = src.ThemeName
 		}
 		if src.Concurrency.MaxConcurrentPings > 0 {
 			dst.Concurrency.MaxConcurrentPings = src.Concurrency.MaxConcurrentPings

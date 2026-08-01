@@ -47,6 +47,10 @@ type UI struct {
 	layoutInfo   Layout
 	lastWidth    int
 	lastRowCount int
+	// rowKeys maps rendered table rows (minus header) to host keys, so
+	// actions on a selected row target what is on screen even if the
+	// underlying sort order has changed since the last render.
+	rowKeys []string
 }
 
 func NewUI(app *tview.Application, st *state.SharedState, th theme.Theme, cfg config.Settings, cb Callbacks, themes []string) *UI {
@@ -168,6 +172,10 @@ func (u *UI) renderTable() {
 	u.Table.Clear()
 	snap := u.State.Snapshot()
 	u.lastRowCount = len(snap) + 1
+	u.rowKeys = u.rowKeys[:0]
+	for _, host := range snap {
+		u.rowKeys = append(u.rowKeys, host.Key)
+	}
 	header := []string{"Hostname", "Mode", "IP", "RTT", "Status", "OK", "Success%", "Success", "Fail", "Last OK", "Error"}
 	for c, h := range header {
 		cell := tview.NewTableCell(h).
@@ -346,7 +354,7 @@ func (u *UI) showAddHosts() {
 
 func (u *UI) showInterval() {
 	modal := u.Builder.IntervalModal(fmt.Sprintf("%.0f", u.Config.Interval.Seconds()), func(text string) {
-		if val, err := strconv.Atoi(text); err == nil && u.Callbacks.SetInterval != nil {
+		if val, err := strconv.Atoi(text); err == nil && val > 0 && u.Callbacks.SetInterval != nil {
 			u.Callbacks.SetInterval(time.Duration(val) * time.Second)
 		}
 		u.closeModal()
@@ -357,7 +365,7 @@ func (u *UI) showInterval() {
 
 func (u *UI) showTimeout() {
 	modal := u.Builder.TimeoutModal(fmt.Sprintf("%.0f", u.Config.Timeout.Seconds()), func(text string) {
-		if val, err := strconv.Atoi(text); err == nil && u.Callbacks.SetTimeout != nil {
+		if val, err := strconv.Atoi(text); err == nil && val > 0 && u.Callbacks.SetTimeout != nil {
 			u.Callbacks.SetTimeout(time.Duration(val) * time.Second)
 		}
 		u.closeModal()
@@ -393,13 +401,13 @@ func (u *UI) showSettings() {
 		u.Themes,
 		u.ThemeName,
 		func(k state.SortKey, d state.SortDirection, intervalVal, timeoutVal, refreshVal, themeVal, protocolVal, tcpPortVal, backendVal, argsVal string) {
-			if secs, err := strconv.Atoi(intervalVal); err == nil && u.Callbacks.SetInterval != nil {
+			if secs, err := strconv.Atoi(intervalVal); err == nil && secs > 0 && u.Callbacks.SetInterval != nil {
 				u.Callbacks.SetInterval(time.Duration(secs) * time.Second)
 			}
-			if secs, err := strconv.Atoi(timeoutVal); err == nil && u.Callbacks.SetTimeout != nil {
+			if secs, err := strconv.Atoi(timeoutVal); err == nil && secs > 0 && u.Callbacks.SetTimeout != nil {
 				u.Callbacks.SetTimeout(time.Duration(secs) * time.Second)
 			}
-			if secs, err := strconv.Atoi(refreshVal); err == nil && u.Callbacks.SetRefreshInterval != nil {
+			if secs, err := strconv.Atoi(refreshVal); err == nil && secs > 0 && u.Callbacks.SetRefreshInterval != nil {
 				u.Callbacks.SetRefreshInterval(time.Duration(secs) * time.Second)
 			}
 			if u.Callbacks.SetTheme != nil {
@@ -451,16 +459,12 @@ func (u *UI) UpdateTheme(th theme.Theme, name string) {
 
 func (u *UI) deleteSelected() {
 	row, _ := u.Table.GetSelection()
-	if row <= 0 {
-		return
-	}
-	snap := u.State.Snapshot()
 	idx := row - 1
-	if idx < 0 || idx >= len(snap) {
+	if idx < 0 || idx >= len(u.rowKeys) {
 		return
 	}
 	if u.Callbacks.DeleteHost != nil {
-		u.Callbacks.DeleteHost(snap[idx].Key)
+		u.Callbacks.DeleteHost(u.rowKeys[idx])
 	}
 }
 

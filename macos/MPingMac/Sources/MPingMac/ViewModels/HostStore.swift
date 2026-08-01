@@ -254,7 +254,20 @@ final class HostStore: ObservableObject {
                     continue
                 }
                 let settings = await MainActor.run { store.settings }
-                await store.gate.acquire()
+                do {
+                    try await store.gate.acquire()
+                } catch {
+                    return // cancelled while waiting for a permit
+                }
+                if Task.isCancelled {
+                    await store.gate.release()
+                    return
+                }
+                // Re-beat after acquiring: time spent queued on a saturated
+                // gate must not count against the loop-health threshold.
+                await MainActor.run {
+                    store.recordHeartbeat(for: hostID)
+                }
                 let defaultPort = settings.defaultTCPPort
                 let payload = settings.pingPayloadBytes
                 let ttl = settings.ttl
@@ -489,11 +502,11 @@ final class HostStore: ObservableObject {
     private static func cidrRange(from token: String) -> [String]? {
         let parts = token.split(separator: "/")
         guard parts.count == 2, let ip = IPv4Address(String(parts[0])), let prefix = Int(parts[1]), prefix >= 0, prefix <= 32 else { return nil }
-        let baseInt = ip.toInt()
         let hostBits = 32 - prefix
-        if hostBits >= 16 { return nil } // avoid huge expansions
+        guard hostBits <= 10 else { return nil } // cap at 1024 addresses, same as dash ranges
         let count = 1 << hostBits
-        return (0..<count).compactMap { offset in IPv4Address(intValue: baseInt + offset)?.description }
+        let networkInt = ip.toInt() & ~(count - 1) // mask to the network boundary
+        return (0..<count).compactMap { offset in IPv4Address(intValue: networkInt + offset)?.description }
     }
 
     private func maybeNotifyTransition(previousSuccess: Bool?, nowSuccess: Bool) {
@@ -597,7 +610,11 @@ final class HostStore: ObservableObject {
     private func schedulePersist() {
         persistTask?.cancel()
         persistTask = Task { [weak self] in
-            try? await Task.sleep(nanoseconds: 300_000_000)
+            do {
+                try await Task.sleep(nanoseconds: 300_000_000)
+            } catch {
+                return // superseded by a newer schedulePersist
+            }
             self?.persistState()
         }
     }
@@ -623,7 +640,8 @@ final class HostStore: ObservableObject {
             visibleColumns: Array(visibleColumns.map(\.rawValue))
         )
         let url = persistenceURL
-        Task.detached {
+        // Serial queue so concurrent snapshots cannot race; the newest write lands last.
+        Self.persistQueue.async {
             do {
                 let data = try JSONEncoder().encode(snapshot)
                 let dir = url.deletingLastPathComponent()
@@ -635,18 +653,25 @@ final class HostStore: ObservableObject {
         }
     }
 
+    private static let persistQueue = DispatchQueue(label: "MPingMac.persist", qos: .utility)
+
     private func startRelativeTimer() {
         relativeTimer?.invalidate()
         relativeTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { [weak self] _ in
             guard let self else { return }
             Task { @MainActor in
                 self.relativeNow = Date()
-                self.checkLoopHealth()
+                await self.checkLoopHealth()
             }
         }
     }
 
-    private func checkLoopHealth() {
+    private func checkLoopHealth() async {
+        // While the gate is saturated, loops park legitimately in acquire();
+        // restarting them would only pile up more waiters.
+        if await gate.hasWaiters {
+            return
+        }
         let now = Date()
         for host in hosts where !host.paused {
             let beat = loopHeartbeats[host.id]

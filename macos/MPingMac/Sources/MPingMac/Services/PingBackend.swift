@@ -5,6 +5,20 @@ protocol PingBackend: Sendable {
     func ping(host: String, timeout: TimeInterval, payloadSize: Int, ttl: Int, doNotFragment: Bool, tcpPort: Int) async -> PingResult
 }
 
+// Blocking BSD-socket and DNS syscalls (recvfrom, getaddrinfo, getnameinfo)
+// must stay off the cooperative thread pool, which is only as wide as the CPU
+// core count; this queue absorbs them. Concurrency is bounded upstream by
+// ConcurrencyGate, so the queue cannot fan out past maxConcurrentPings.
+private let blockingSyscallQueue = DispatchQueue(label: "MPingMac.blocking-ping", qos: .utility, attributes: .concurrent)
+
+private func offloadBlocking<T>(_ body: @escaping @Sendable () -> T) async -> T {
+    await withCheckedContinuation { continuation in
+        blockingSyscallQueue.async {
+            continuation.resume(returning: body())
+        }
+    }
+}
+
 // Swift-native ICMP (IPv4 & IPv6) echo using raw sockets.
 struct SwiftICMPBackend: PingBackend {
     func ping(host: String, timeout: TimeInterval, payloadSize: Int, ttl: Int, doNotFragment: Bool, tcpPort: Int) async -> PingResult {
@@ -15,9 +29,9 @@ struct SwiftICMPBackend: PingBackend {
 
         switch target {
         case .ipv4(let addr):
-            return await pingIPv4(address: addr, host: host, timeout: timeout, payloadSize: payloadSize, ttl: ttl, doNotFragment: doNotFragment)
+            return await offloadBlocking { pingIPv4(address: addr, host: host, timeout: timeout, payloadSize: payloadSize, ttl: ttl, doNotFragment: doNotFragment) }
         case .ipv6(let addr):
-            return await pingIPv6(address: addr, host: host, timeout: timeout, payloadSize: payloadSize, ttl: ttl)
+            return await offloadBlocking { pingIPv6(address: addr, host: host, timeout: timeout, payloadSize: payloadSize, ttl: ttl) }
         }
     }
 
@@ -33,7 +47,7 @@ struct SwiftICMPBackend: PingBackend {
     private func resolveHost(_ host: String, attempts: Int) async -> Target? {
         let clampedAttempts = max(1, attempts)
         for attempt in 0..<clampedAttempts {
-            if let target = resolveHostOnce(host) { return target }
+            if let target = await offloadBlocking({ resolveHostOnce(host) }) { return target }
             if attempt < clampedAttempts - 1 {
                 try? await Task.sleep(nanoseconds: UInt64(50_000_000 * UInt64(attempt + 1)))
             }
@@ -77,7 +91,7 @@ struct SwiftICMPBackend: PingBackend {
         return nil
     }
 
-    private func pingIPv4(address: sockaddr_in, host: String, timeout: TimeInterval, payloadSize: Int, ttl: Int, doNotFragment: Bool) async -> PingResult {
+    private func pingIPv4(address: sockaddr_in, host: String, timeout: TimeInterval, payloadSize: Int, ttl: Int, doNotFragment: Bool) -> PingResult {
         let sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_ICMP)
         if sock < 0 {
             return PingResult(host: host, success: false, rtt: nil, resolvedIP: host, resolvedName: nil, rawOutput: "", errorDescription: "Socket error")
@@ -172,7 +186,7 @@ struct SwiftICMPBackend: PingBackend {
         return PingResult(host: host, success: true, rtt: rtt, resolvedIP: resolved ?? host, resolvedName: reverseName, rawOutput: "ICMPv4 reply", errorDescription: nil)
     }
 
-    private func pingIPv6(address: sockaddr_in6, host: String, timeout: TimeInterval, payloadSize: Int, ttl: Int) async -> PingResult {
+    private func pingIPv6(address: sockaddr_in6, host: String, timeout: TimeInterval, payloadSize: Int, ttl: Int) -> PingResult {
         let sock = socket(AF_INET6, SOCK_DGRAM, IPPROTO_ICMPV6)
         if sock < 0 {
             return PingResult(host: host, success: false, rtt: nil, resolvedIP: host, resolvedName: nil, rawOutput: "", errorDescription: "Socket error")
@@ -270,8 +284,10 @@ struct SwiftICMPBackend: PingBackend {
 struct TCPPingBackend: PingBackend {
     func ping(host: String, timeout: TimeInterval, payloadSize: Int, ttl: Int, doNotFragment: Bool, tcpPort: Int) async -> PingResult {
         let parsed = parseHostAndPort(host, defaultPort: tcpPort)
-        let resolvedIP = resolveIPAddress(parsed.host)
-        let resolvedName = resolvedIP.flatMap(resolveHostname) ?? host
+        let (resolvedIP, resolvedName) = await offloadBlocking { () -> (String?, String) in
+            let ip = resolveIPAddress(parsed.host)
+            return (ip, ip.flatMap(resolveHostname) ?? host)
+        }
         let maxPayload = 1460 // approximate safe payload for MTU 1500
         if payloadSize > maxPayload {
             return PingResult(

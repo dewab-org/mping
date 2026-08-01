@@ -219,6 +219,9 @@ func main() {
 			markDirty()
 		},
 		SetInterval: func(d time.Duration) {
+			if d <= 0 {
+				return
+			}
 			settings.Interval = d
 			st.SetInterval(d)
 			if ui != nil {
@@ -228,6 +231,9 @@ func main() {
 			markDirty()
 		},
 		SetTimeout: func(d time.Duration) {
+			if d <= 0 {
+				return
+			}
 			settings.Timeout = d
 			st.SetTimeout(d)
 			if ui != nil {
@@ -237,6 +243,9 @@ func main() {
 			markDirty()
 		},
 		SetRefreshInterval: func(d time.Duration) {
+			if d <= 0 {
+				return
+			}
 			settings.RefreshInterval = d
 			atomic.StoreInt64(&refreshNs, d.Nanoseconds())
 			if ui != nil {
