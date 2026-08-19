@@ -13,7 +13,7 @@ import (
 // TCPPing measures reachability by opening a TCP connection.
 func TCPPing(ctx context.Context, hostName string, defaultPort int, timeout time.Duration) (PingResult, error) {
 	host, port, err := tcpTarget(hostName, defaultPort)
-	ip, resolved := resolveHost(host)
+	ip, resolved := resolveHost(ctx, host)
 	if err != nil {
 		return PingResult{ResolvedIP: ip, ResolvedName: resolved, RawError: err.Error()}, err
 	}

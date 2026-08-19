@@ -46,13 +46,20 @@ func httpPing(ctx context.Context, target Target, timeout time.Duration, client 
 		return PingResult{RawError: err.Error()}, err
 	}
 
-	ip, _ := resolveHost(parsed.Hostname())
 	ctxTimeout, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
+	// The lookup is display-only; run it concurrently with the request so a
+	// slow resolver cannot shrink the GET's timeout window.
+	ipCh := make(chan string, 1)
+	go func() {
+		ip, _ := resolveHost(ctxTimeout, parsed.Hostname())
+		ipCh <- ip
+	}()
+
 	req, err := http.NewRequestWithContext(ctxTimeout, http.MethodGet, parsed.String(), nil)
 	if err != nil {
-		return PingResult{ResolvedIP: ip, ResolvedName: parsed.String(), RawError: err.Error()}, err
+		return PingResult{ResolvedIP: <-ipCh, ResolvedName: parsed.String(), RawError: err.Error()}, err
 	}
 
 	start := time.Now()
@@ -62,6 +69,7 @@ func httpPing(ctx context.Context, target Target, timeout time.Duration, client 
 		_, _ = io.Copy(io.Discard, resp.Body)
 		_ = resp.Body.Close()
 	}
+	ip := <-ipCh
 	if err != nil {
 		return PingResult{
 			ResolvedIP:   ip,
