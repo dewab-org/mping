@@ -82,6 +82,20 @@ func TestParseHostSpec(t *testing.T) {
 			wantErr:         true,
 		},
 		{
+			name:            "option-like host rejected",
+			input:           "-f",
+			defaultProtocol: "icmp",
+			defaultPort:     443,
+			wantErr:         true,
+		},
+		{
+			name:            "option-like tcp host rejected",
+			input:           "tcp:-i0.1:80",
+			defaultProtocol: "icmp",
+			defaultPort:     443,
+			wantErr:         true,
+		},
+		{
 			name:            "https URL",
 			input:           "https://example.com/health",
 			defaultProtocol: "icmp",

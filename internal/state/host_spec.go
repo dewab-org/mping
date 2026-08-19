@@ -74,6 +74,11 @@ func ParseHostSpec(input, defaultProtocol string, defaultPort int) (HostSpec, er
 	if host == "" {
 		return HostSpec{}, fmt.Errorf("empty host")
 	}
+	// The host is passed as an argument to the system ping command; a leading
+	// dash would be interpreted as an option (e.g. -f flood mode).
+	if strings.HasPrefix(host, "-") {
+		return HostSpec{}, fmt.Errorf("host must not start with '-'")
+	}
 	if port < 1 || port > 65535 {
 		return HostSpec{}, fmt.Errorf("tcp port must be 1-65535, got %d", port)
 	}
