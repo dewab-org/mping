@@ -36,7 +36,7 @@ func main() {
 		tcpPortFlag  = flag.Int("tcp-port", 0, "TCP port for tcp protocol")
 		workersFlag  = flag.Int("max-concurrent-pings", 0, "worker pool size")
 		queueFlag    = flag.Int("ping-queue-capacity", 0, "ping queue capacity")
-		maxHostsFlag = flag.Int("max-hosts", 0, "maximum hosts (0 = unlimited)")
+		maxHostsFlag = flag.Int("max-hosts", -1, "maximum hosts (0 = unlimited; default: config value)")
 		helpFlag     = flag.Bool("help", false, "show help")
 		helpShort    = flag.Bool("h", false, "show help (shorthand)")
 		refreshVal   int
@@ -67,6 +67,14 @@ func main() {
 	}
 	versionFlag := flag.Bool("version", false, "show version")
 	flag.Parse()
+
+	// A negative value is the internal "flag not provided" sentinel; reject it
+	// when given explicitly rather than silently falling back to the config.
+	flag.Visit(func(f *flag.Flag) {
+		if f.Name == "max-hosts" && *maxHostsFlag < 0 {
+			log.Fatalf("--max-hosts must be >= 0 (0 = unlimited), got %d", *maxHostsFlag)
+		}
+	})
 
 	if *helpFlag || *helpShort {
 		flag.Usage()

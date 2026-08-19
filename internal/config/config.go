@@ -138,12 +138,17 @@ func LoadConfigFile(path string) (Config, error) {
 }
 
 // FindConfigPath resolves the configuration file path using the search order.
+// An explicit CLI path is authoritative: it either exists or the lookup fails,
+// with no fallback to the standard locations.
 func FindConfigPath(cliPath string) (string, bool) {
-	candidates := []string{}
 	if cliPath != "" {
-		candidates = append(candidates, cliPath)
+		if _, err := os.Stat(cliPath); err == nil {
+			return cliPath, true
+		}
+		return "", false
 	}
 
+	candidates := []string{}
 	if xdg := os.Getenv("XDG_CONFIG_HOME"); xdg != "" {
 		candidates = append(candidates, filepath.Join(xdg, "mping", "config.yaml"))
 	} else if home, err := os.UserHomeDir(); err == nil {
@@ -305,11 +310,13 @@ type CLIOverrides struct {
 	RefreshSeconds     int
 	MaxConcurrentPings int
 	PingQueueCapacity  int
-	MaxHosts           int
-	Backend            string
-	Protocol           string
-	TCPPort            int
-	ThemeName          string
+	// MaxHosts < 0 means the flag was not provided (0 is a valid override:
+	// unlimited hosts).
+	MaxHosts  int
+	Backend   string
+	Protocol  string
+	TCPPort   int
+	ThemeName string
 }
 
 func defaultArgs(cfgArgs []string) []string {

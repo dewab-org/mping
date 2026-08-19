@@ -71,6 +71,38 @@ func TestLoadConfigFileEmptyAndMinimal(t *testing.T) {
 	}
 }
 
+func TestMergeSettingsMaxHosts(t *testing.T) {
+	fileCfg := Config{Concurrency: ConcurrencyConfig{MaxHosts: 50}}
+
+	settings, err := MergeSettings(Defaults(), fileCfg, CLIOverrides{MaxHosts: -1}, "")
+	if err != nil {
+		t.Fatalf("MergeSettings: %v", err)
+	}
+	if settings.MaxHosts != 50 {
+		t.Errorf("MaxHosts = %d, want config value 50 when flag unset", settings.MaxHosts)
+	}
+
+	settings, err = MergeSettings(Defaults(), fileCfg, CLIOverrides{MaxHosts: 0}, "")
+	if err != nil {
+		t.Fatalf("MergeSettings: %v", err)
+	}
+	if settings.MaxHosts != 0 {
+		t.Errorf("MaxHosts = %d, want explicit CLI 0 (unlimited) to win", settings.MaxHosts)
+	}
+}
+
+func TestFindConfigPathExplicitPathIsAuthoritative(t *testing.T) {
+	// Missing explicit path must fail rather than fall back to defaults.
+	if path, ok := FindConfigPath(filepath.Join(t.TempDir(), "nope.yaml")); ok {
+		t.Errorf("FindConfigPath returned %q for a missing explicit path", path)
+	}
+	existing := writeConfig(t, "interval_seconds: 5\n")
+	path, ok := FindConfigPath(existing)
+	if !ok || path != existing {
+		t.Errorf("FindConfigPath = %q ok=%v, want %q", path, ok, existing)
+	}
+}
+
 func TestMergeSettingsPrecedence(t *testing.T) {
 	fileCfg := Config{IntervalSeconds: 5, ThemeName: "file-theme"}
 	cli := CLIOverrides{IntervalSeconds: 7}
