@@ -178,7 +178,9 @@ func (u *UI) renderTable() {
 	}
 	header := []string{"Hostname", "Mode", "IP", "RTT", "Status", "OK", "Success%", "Success", "Fail", "Last OK", "Error"}
 	for c, h := range header {
-		cell := tview.NewTableCell(h).
+		// Pad headers to the computed widths like data cells; an unpadded
+		// header would widen its column past the layout's terminal budget.
+		cell := tview.NewTableCell(PadToWidth(h, u.layoutInfo.ColumnWidths[c])).
 			SetTextColor(u.Theme.HeaderForeground).
 			SetBackgroundColor(u.Theme.HeaderBackground).
 			SetSelectable(false)
@@ -189,11 +191,7 @@ func (u *UI) renderTable() {
 		row := i + 1
 		okText := "✖"
 		okColor := u.Theme.OKTextFailure
-		success := false
-		if host.LastOK.After(time.Time{}) && host.LastError == "" {
-			success = true
-		}
-		if success {
+		if host.LastSuccess {
 			okText = "✔"
 			okColor = u.Theme.OKTextSuccess
 		}
@@ -218,7 +216,7 @@ func (u *UI) renderTable() {
 			resolved,
 			modeLabel(host.Protocol, host.TCPPort),
 			host.IP,
-			fmt.Sprintf("%.2fs", host.LastRTT.Seconds()),
+			formatRTT(host.LastRTT),
 			statusLabel(host.LastStatus),
 			okText,
 			fmt.Sprintf("%.1f%%", successPct),
@@ -256,6 +254,18 @@ func modeLabel(protocol string, tcpPort int) string {
 		return fmt.Sprintf("tcp:%d", tcpPort)
 	}
 	return protocol
+}
+
+// formatRTT renders sub-second RTTs in milliseconds so typical LAN/WAN
+// latencies are legible (12.4ms rather than 0.01s).
+func formatRTT(d time.Duration) string {
+	if d <= 0 {
+		return "-"
+	}
+	if d < time.Second {
+		return fmt.Sprintf("%.1fms", float64(d.Microseconds())/1000)
+	}
+	return fmt.Sprintf("%.2fs", d.Seconds())
 }
 
 func statusLabel(status string) string {

@@ -6,72 +6,55 @@ import (
 	"time"
 )
 
-func less(hosts map[string]*HostState, a, b string, key SortKey, dir SortDirection) bool {
-	ha := hosts[a]
-	hb := hosts[b]
-	var result bool
+// less orders two snapshots for the given key and direction. The primary key
+// is inverted for descending order, but ties always fall back to the display
+// name ascending so equal rows keep a stable, predictable order.
+func less(a, b HostSnapshot, key SortKey, dir SortDirection, now time.Time) bool {
+	c := compareByKey(a, b, key, now)
+	if c == 0 {
+		return displayName(a.ResolvedName) < displayName(b.ResolvedName)
+	}
+	if dir == SortDesc {
+		return c > 0
+	}
+	return c < 0
+}
 
-	nameA := displayName(ha)
-	nameB := displayName(hb)
-
+// compareByKey returns -1, 0, or 1 comparing a and b on the sort key. The
+// caller supplies the clock reading so every comparison in one sort pass
+// sees the same instant.
+func compareByKey(a, b HostSnapshot, key SortKey, now time.Time) int {
 	switch key {
 	case SortRTT:
-		if ha.LastRTT == hb.LastRTT {
-			result = strings.Compare(nameA, nameB) < 0
-		} else {
-			result = ha.LastRTT < hb.LastRTT
-		}
+		return compareOrdered(a.LastRTT, b.LastRTT)
 	case SortIP:
-		if ha.IP == hb.IP {
-			result = strings.Compare(nameA, nameB) < 0
-		} else {
-			result = strings.Compare(ha.IP, hb.IP) < 0
-		}
+		return strings.Compare(a.IP, b.IP)
 	case SortSuccess:
-		if ha.SuccessCount == hb.SuccessCount {
-			result = strings.Compare(nameA, nameB) < 0
-		} else {
-			result = ha.SuccessCount < hb.SuccessCount
-		}
+		return compareOrdered(a.SuccessCount, b.SuccessCount)
 	case SortSuccessPct:
-		aTotal := ha.SuccessCount + ha.FailureCount
-		bTotal := hb.SuccessCount + hb.FailureCount
-		aPct := pct(ha.SuccessCount, aTotal)
-		bPct := pct(hb.SuccessCount, bTotal)
-		if aPct == bPct {
-			result = strings.Compare(nameA, nameB) < 0
-		} else {
-			result = aPct < bPct
-		}
+		aPct := pct(a.SuccessCount, a.SuccessCount+a.FailureCount)
+		bPct := pct(b.SuccessCount, b.SuccessCount+b.FailureCount)
+		return compareOrdered(aPct, bPct)
 	case SortFailure:
-		if ha.FailureCount == hb.FailureCount {
-			result = strings.Compare(nameA, nameB) < 0
-		} else {
-			result = ha.FailureCount < hb.FailureCount
-		}
+		return compareOrdered(a.FailureCount, b.FailureCount)
 	case SortLastOK:
-		now := time.Now()
-		aElapsed := elapsedOrMax(now, ha.LastOK)
-		bElapsed := elapsedOrMax(now, hb.LastOK)
-		if aElapsed == bElapsed {
-			result = strings.Compare(nameA, nameB) < 0
-		} else {
-			result = aElapsed < bElapsed
-		}
+		return compareOrdered(elapsedOrMax(now, a.LastOK), elapsedOrMax(now, b.LastOK))
 	case SortError:
-		if ha.LastError == hb.LastError {
-			result = strings.Compare(nameA, nameB) < 0
-		} else {
-			result = strings.Compare(ha.LastError, hb.LastError) < 0
-		}
+		return strings.Compare(a.LastError, b.LastError)
 	default:
-		result = strings.Compare(nameA, nameB) < 0
+		return strings.Compare(displayName(a.ResolvedName), displayName(b.ResolvedName))
 	}
+}
 
-	if dir == SortDesc {
-		return !result
+func compareOrdered[T int64 | float64 | time.Duration](a, b T) int {
+	switch {
+	case a < b:
+		return -1
+	case a > b:
+		return 1
+	default:
+		return 0
 	}
-	return result
 }
 
 func elapsedOrMax(now time.Time, ts time.Time) time.Duration {
@@ -81,8 +64,8 @@ func elapsedOrMax(now time.Time, ts time.Time) time.Duration {
 	return now.Sub(ts)
 }
 
-func displayName(h *HostState) string {
-	name := strings.TrimSpace(h.ResolvedName)
+func displayName(resolvedName string) string {
+	name := strings.TrimSpace(resolvedName)
 	if name == "" || strings.EqualFold(name, "N/A") {
 		return "~n/a~" // tilde to sort after Z
 	}

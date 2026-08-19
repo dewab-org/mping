@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"net"
 	"os/exec"
+	"regexp"
 	"runtime"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -26,29 +27,64 @@ func NewSystemBackend(command string, args []string) *SystemBackend {
 
 func (b *SystemBackend) Ping(ctx context.Context, target Target, timeout time.Duration) (PingResult, error) {
 	hostName := target.HostName
-	ip, resolvedName := resolveHost(hostName)
-
-	args := b.buildArgs(timeout)
-	args = append(args, hostName)
 
 	ctxTimeout, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
+	// The lookup is display-only; run it concurrently with the probe so a
+	// slow resolver cannot eat into the ping's timeout budget.
+	type resolution struct{ ip, name string }
+	resolvedCh := make(chan resolution, 1)
+	go func() {
+		ip, name := resolveHost(ctxTimeout, hostName)
+		resolvedCh <- resolution{ip: ip, name: name}
+	}()
+
+	args := b.buildArgs(timeout)
+	args = append(args, hostName)
+
 	cmd := exec.CommandContext(ctxTimeout, b.Command, args...)
-	var stderr bytes.Buffer
+	var stdout, stderr bytes.Buffer
+	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
 	start := time.Now()
 	err := cmd.Run()
+	// Prefer the RTT reported by ping itself; the wall clock includes
+	// fork/exec and ping's own DNS resolution. On failure keep the wall
+	// clock: a killed multi-packet run may still print an early reply's
+	// time=, which would make a stalled host look fast.
 	rtt := time.Since(start)
+	if err == nil {
+		if parsed, ok := parsePingRTT(stdout.String()); ok {
+			rtt = parsed
+		}
+	}
+	resolved := <-resolvedCh
 
 	res := PingResult{
-		ResolvedIP:   ip,
-		ResolvedName: resolvedName,
+		ResolvedIP:   resolved.ip,
+		ResolvedName: resolved.name,
 		RTT:          rtt,
 		Success:      err == nil,
 		RawError:     strings.TrimSpace(stderr.String()),
 	}
 	return res, err
+}
+
+var pingRTTPattern = regexp.MustCompile(`time[=<]([0-9]+(?:\.[0-9]+)?)\s*ms`)
+
+// parsePingRTT extracts the round-trip time from ping's output
+// (e.g. "64 bytes from 1.1.1.1: icmp_seq=0 ttl=58 time=12.383 ms").
+func parsePingRTT(output string) (time.Duration, bool) {
+	m := pingRTTPattern.FindStringSubmatch(output)
+	if m == nil {
+		return 0, false
+	}
+	ms, err := strconv.ParseFloat(m[1], 64)
+	if err != nil {
+		return 0, false
+	}
+	return time.Duration(ms * float64(time.Millisecond)), true
 }
 
 func (b *SystemBackend) buildArgs(timeout time.Duration) []string {
@@ -69,21 +105,4 @@ func (b *SystemBackend) buildArgs(timeout time.Duration) []string {
 		args = append(args, "-W", fmt.Sprintf("%d", secs))
 		return args
 	}
-}
-
-func resolveHost(host string) (ip string, resolved string) {
-	if parsed := net.ParseIP(host); parsed != nil {
-		ip = parsed.String()
-		names, err := net.LookupAddr(ip)
-		if err != nil || len(names) == 0 {
-			return ip, "N/A"
-		}
-		return ip, strings.TrimSuffix(names[0], ".")
-	}
-
-	ips, err := net.LookupIP(host)
-	if err == nil && len(ips) > 0 {
-		ip = ips[0].String()
-	}
-	return ip, host
 }

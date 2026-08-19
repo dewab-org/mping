@@ -67,14 +67,25 @@ func (p *WorkerPool) runJob(job PingJob) {
 }
 
 func (p *WorkerPool) Submit(job PingJob) bool {
+	return p.SubmitCtx(context.Background(), job)
+}
+
+// SubmitCtx enqueues a job unless the pool is closed or the caller's context
+// is cancelled — so a stopped scheduler blocked on a full queue unblocks
+// immediately instead of delivering a ghost job.
+func (p *WorkerPool) SubmitCtx(ctx context.Context, job PingJob) bool {
 	// Check for shutdown first: select picks randomly among ready cases, so
 	// without this a closed pool with queue capacity could still accept jobs.
 	select {
+	case <-ctx.Done():
+		return false
 	case <-p.ctx.Done():
 		return false
 	default:
 	}
 	select {
+	case <-ctx.Done():
+		return false
 	case <-p.ctx.Done():
 		return false
 	case p.jobs <- job:
@@ -121,7 +132,7 @@ func (g *SchedulerGroup) Start(hostKey string) {
 
 func (g *SchedulerGroup) runScheduler(ctx context.Context, hostKey string) {
 	// initial immediate ping
-	g.enqueue(hostKey)
+	g.enqueue(ctx, hostKey)
 	for {
 		name, protocol, tcpPort, interval, timeout, ok := g.state.HostConfig(hostKey)
 		if !ok {
@@ -131,17 +142,17 @@ func (g *SchedulerGroup) runScheduler(ctx context.Context, hostKey string) {
 		case <-ctx.Done():
 			return
 		case <-time.After(interval):
-			g.pool.Submit(PingJob{HostKey: hostKey, HostName: name, Protocol: protocol, TCPPort: tcpPort, Timeout: timeout})
+			g.pool.SubmitCtx(ctx, PingJob{HostKey: hostKey, HostName: name, Protocol: protocol, TCPPort: tcpPort, Timeout: timeout})
 		}
 	}
 }
 
-func (g *SchedulerGroup) enqueue(hostKey string) {
+func (g *SchedulerGroup) enqueue(ctx context.Context, hostKey string) {
 	name, protocol, tcpPort, _, timeout, ok := g.state.HostConfig(hostKey)
 	if !ok {
 		return
 	}
-	g.pool.Submit(PingJob{HostKey: hostKey, HostName: name, Protocol: protocol, TCPPort: tcpPort, Timeout: timeout})
+	g.pool.SubmitCtx(ctx, PingJob{HostKey: hostKey, HostName: name, Protocol: protocol, TCPPort: tcpPort, Timeout: timeout})
 }
 
 func (g *SchedulerGroup) Stop(hostKey string) {

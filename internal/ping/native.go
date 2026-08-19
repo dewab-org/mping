@@ -2,6 +2,7 @@ package ping
 
 import (
 	"context"
+	"net"
 	"time"
 
 	goping "github.com/go-ping/ping"
@@ -16,15 +17,32 @@ func NewNativeBackend() *NativeBackend {
 
 func (b *NativeBackend) Ping(ctx context.Context, target Target, timeout time.Duration) (PingResult, error) {
 	hostName := target.HostName
-	ip, resolved := resolveHost(hostName)
 
 	pinger, err := goping.NewPinger(hostName)
 	if err != nil {
-		return PingResult{ResolvedIP: ip, ResolvedName: resolved, RawError: err.Error()}, err
+		return PingResult{ResolvedName: hostName, RawError: err.Error()}, err
 	}
 	pinger.Count = 1
 	pinger.Timeout = timeout
 	pinger.SetPrivileged(false)
+
+	// The pinger already resolved the target, so display the IP it actually
+	// probes instead of issuing a second forward lookup that can disagree
+	// under round-robin DNS. Only IP literals need a (cached) reverse lookup
+	// for a display name; it runs concurrently with the probe, bounded by the
+	// same timeout.
+	ip := pinger.IPAddr().IP.String()
+	resolvedCh := make(chan string, 1)
+	if net.ParseIP(hostName) != nil {
+		rctx, rcancel := context.WithTimeout(ctx, timeout)
+		defer rcancel()
+		go func() {
+			_, name := resolveHost(rctx, hostName)
+			resolvedCh <- name
+		}()
+	} else {
+		resolvedCh <- hostName
+	}
 
 	start := time.Now()
 	done := make(chan error, 1)
@@ -44,7 +62,7 @@ func (b *NativeBackend) Ping(ctx context.Context, target Target, timeout time.Du
 
 	res := PingResult{
 		ResolvedIP:   ip,
-		ResolvedName: resolved,
+		ResolvedName: <-resolvedCh,
 		RTT:          rtt,
 		Success:      err == nil && stats.PacketsRecv > 0,
 	}

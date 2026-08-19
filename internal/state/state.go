@@ -40,6 +40,7 @@ type HostState struct {
 	LastStatus   string
 	LastError    string
 	LastOK       time.Time
+	LastSuccess  bool
 	Interval     time.Duration
 	Timeout      time.Duration
 }
@@ -58,6 +59,7 @@ type HostSnapshot struct {
 	LastStatus   string
 	LastError    string
 	LastOK       time.Time
+	LastSuccess  bool
 	Interval     time.Duration
 	Timeout      time.Duration
 }
@@ -117,7 +119,6 @@ func (s *SharedState) AddHostSpec(spec HostSpec, interval, timeout time.Duration
 	}
 	s.hosts[key].Name = name
 	s.order = append(s.order, key)
-	s.sortLocked()
 	return nil
 }
 
@@ -151,6 +152,7 @@ func (s *SharedState) ApplyResult(key string, res ping.PingResult, err error) bo
 	if res.ResolvedName != "" {
 		h.ResolvedName = res.ResolvedName
 	}
+	h.LastSuccess = res.Success
 	if res.Success {
 		h.SuccessCount++
 		h.LastOK = time.Now()
@@ -158,18 +160,24 @@ func (s *SharedState) ApplyResult(key string, res ping.PingResult, err error) bo
 	} else {
 		h.FailureCount++
 		h.LastError = res.RawError
+		if h.LastError == "" && err != nil {
+			// e.g. Linux ping timing out with empty stderr: keep the error
+			// text non-empty so the failure is visible in the Error column.
+			h.LastError = err.Error()
+		}
 	}
 	h.LastRTT = res.RTT
 	h.LastStatus = res.Status
-
-	s.sortLocked()
 	return true
 }
 
+// Snapshot returns a sorted copy of the current host state. Sorting happens
+// here, on the copy, rather than on every ApplyResult under the write lock:
+// results merely mutate state, and the presentation order is derived at
+// render time.
 func (s *SharedState) Snapshot() []HostSnapshot {
 	s.mu.RLock()
-	defer s.mu.RUnlock()
-
+	key, dir := s.sortKey, s.sortDir
 	out := make([]HostSnapshot, 0, len(s.order))
 	for _, k := range s.order {
 		h := s.hosts[k]
@@ -186,10 +194,20 @@ func (s *SharedState) Snapshot() []HostSnapshot {
 			LastStatus:   h.LastStatus,
 			LastError:    h.LastError,
 			LastOK:       h.LastOK,
+			LastSuccess:  h.LastSuccess,
 			Interval:     h.Interval,
 			Timeout:      h.Timeout,
 		})
 	}
+	s.mu.RUnlock()
+
+	// One clock reading for the whole sort: calling time.Now() inside the
+	// comparator is O(n log n) reads per refresh and a moving clock can make
+	// the comparator inconsistent mid-sort.
+	now := time.Now()
+	sort.SliceStable(out, func(i, j int) bool {
+		return less(out[i], out[j], key, dir, now)
+	})
 	return out
 }
 
@@ -198,7 +216,6 @@ func (s *SharedState) SetSort(key SortKey, dir SortDirection) {
 	defer s.mu.Unlock()
 	s.sortKey = key
 	s.sortDir = dir
-	s.sortLocked()
 }
 
 func (s *SharedState) SortConfig() (SortKey, SortDirection) {
@@ -237,10 +254,4 @@ func (s *SharedState) Count() int {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	return len(s.hosts)
-}
-
-func (s *SharedState) sortLocked() {
-	sort.SliceStable(s.order, func(i, j int) bool {
-		return less(s.hosts, s.order[i], s.order[j], s.sortKey, s.sortDir)
-	})
 }
