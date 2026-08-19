@@ -14,7 +14,7 @@
 
 ## UI
 - Layout: Title bar (top), table (center) with vertical scrollbar, status bar (bottom).
-- Table columns: Hostname (resolved, `-n/a-` if absent), Mode, IP, RTT (2 decimals), Status, OK, Success%, Success, Fail, Last OK (elapsed), Error (clamped, no horizontal scroll).
+- Table columns: Hostname (resolved, `-n/a-` if absent), Mode, IP, RTT (milliseconds below 1s, seconds above), Status, OK, Success%, Success, Fail, Last OK (elapsed), Error (clamped, no horizontal scroll). Columns shrink proportionally on narrow terminals so all stay visible.
 - Title shows mode, sort, workers, interval, timeout, refresh, theme, config path.
 - Status bar shows keybindings.
 - Modals: Add hosts, interval, timeout, sort, help, settings.
