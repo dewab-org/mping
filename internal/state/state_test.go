@@ -179,6 +179,21 @@ func TestSortByFailureAndSuccessPct(t *testing.T) {
 	}
 }
 
+func TestSortDescTieBreaksByNameAscending(t *testing.T) {
+	s := NewSharedState(0)
+	for _, h := range []string{"bravo", "alpha", "charlie"} {
+		if err := s.AddHost(h, time.Second, time.Second); err != nil {
+			t.Fatalf("AddHost: %v", err)
+		}
+	}
+	// All hosts have identical RTT (zero); descending order must not invert
+	// the name tie-break.
+	s.SetSort(SortRTT, SortDesc)
+	if got := snapshotKeys(s); got[0] != "alpha" || got[1] != "bravo" || got[2] != "charlie" {
+		t.Errorf("rtt-desc tie order = %v, want names A-Z", got)
+	}
+}
+
 func TestSetIntervalAndTimeout(t *testing.T) {
 	s := NewSharedState(0)
 	if err := s.AddHost("h", time.Second, time.Second); err != nil {
@@ -200,7 +215,7 @@ func TestDisplayNameFallback(t *testing.T) {
 		"real":  "real",
 		"other": "other",
 	} {
-		if got := displayName(&HostState{ResolvedName: in}); got != want {
+		if got := displayName(in); got != want {
 			t.Errorf("displayName(%q) = %q, want %q", in, got, want)
 		}
 	}
