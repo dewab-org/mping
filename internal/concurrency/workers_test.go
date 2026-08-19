@@ -153,6 +153,31 @@ func TestSchedulerExitsWhenHostDeleted(t *testing.T) {
 	}
 }
 
+func TestSubmitCtxUnblocksOnCallerCancel(t *testing.T) {
+	st := newTestState(t, "h1")
+	// No workers drain the queue; capacity 1 fills immediately.
+	pool := NewWorkerPool(context.Background(), newStubBackend(), st, 0, 1, nil)
+	defer pool.Close()
+	if !pool.Submit(PingJob{HostKey: "h1", HostName: "h1"}) {
+		t.Fatal("first Submit should fill the queue")
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	done := make(chan bool, 1)
+	go func() {
+		done <- pool.SubmitCtx(ctx, PingJob{HostKey: "h1", HostName: "h1"})
+	}()
+	cancel()
+	select {
+	case ok := <-done:
+		if ok {
+			t.Error("SubmitCtx returned true after caller cancellation")
+		}
+	case <-time.After(time.Second):
+		t.Fatal("SubmitCtx stayed blocked after caller cancellation")
+	}
+}
+
 func TestSchedulerStartIsIdempotent(t *testing.T) {
 	st := newTestState(t, "h1")
 	backend := newStubBackend()
