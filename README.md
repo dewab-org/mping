@@ -4,6 +4,9 @@
 
 `multiping` (binary `mping`) is a terminal UI for multi-host monitoring. It probes ICMP, TCP, HTTP, and HTTPS targets concurrently, shows status, success/failure counters, and RTTs, and lets you add/remove targets at runtime.
 
+Why I built it, on my blog:
+[mping: ping a pile of hosts from one terminal screen](https://danielwhicker.com/2026/10/mping-terminal-ping-monitor/).
+
 ## Build
 
 ### Prerequisites
